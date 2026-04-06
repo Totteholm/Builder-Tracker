@@ -339,12 +339,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnAddReceipt.addEventListener('click', () => {
         if(formReceipt.style.display === 'none') {
+            document.getElementById('edit-receipt-id').value = '';
+            document.getElementById('form-receipt-title').innerText = "Ny Utgift";
+            document.getElementById('btn-cancel-receipt').style.display = 'none';
             receiptLinesContainer.innerHTML = '';
             receiptStore.value = '';
             addReceiptLine(); 
             calcReceiptTotal();
             formReceipt.style.display = 'block';
         } else formReceipt.style.display = 'none';
+    });
+    
+    document.getElementById('btn-cancel-receipt').addEventListener('click', () => {
+        formReceipt.style.display = 'none';
+        currReceiptImg = null;
     });
 
     btnAddReceiptLine.addEventListener('click', addReceiptLine);
@@ -390,8 +398,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if(items.length === 0) return alert('Du måste ha minst en ifylld rad.');
         if(!valid) return alert('Alla rader måste ha ett giltigt belopp, ett valt rum och en kategori.');
 
-        expenses.push({ id: 'exp' + Date.now(), store: receiptStore.value, amount: total, image: currReceiptImg, date: new Date().toLocaleDateString('sv-SE'), items: items });
+        const eid = document.getElementById('edit-receipt-id').value;
+        if (eid) {
+            const idx = expenses.findIndex(x => x.id === eid);
+            if(idx !== -1) {
+                expenses[idx].store = receiptStore.value;
+                expenses[idx].amount = total;
+                expenses[idx].image = currReceiptImg;
+                expenses[idx].items = items;
+            }
+        } else {
+            expenses.push({ id: 'exp' + Date.now(), store: receiptStore.value, amount: total, image: currReceiptImg, date: new Date().toLocaleDateString('sv-SE'), items: items });
+        }
 
+        document.getElementById('edit-receipt-id').value = '';
         receiptStore.value = '';
         receiptLinesContainer.innerHTML = '';
         receiptPreview.style.display='none';
@@ -399,6 +419,64 @@ document.addEventListener('DOMContentLoaded', () => {
         formReceipt.style.display='none';
         saveState();
     });
+
+    window.deleteExpense = (eid) => {
+        if(!confirm('Är du säker på att du vill ta bort denna utgift? Summan dras bort från kalkylen.')) return;
+        expenses = expenses.filter(e => e.id !== eid);
+        saveState();
+    };
+
+    window.editExpense = (eid) => {
+        const exp = expenses.find(e => e.id === eid);
+        if(!exp) return;
+
+        document.getElementById('edit-receipt-id').value = exp.id;
+        document.getElementById('form-receipt-title').innerText = "Redigera Utgift";
+        document.getElementById('btn-cancel-receipt').style.display = 'block';
+
+        receiptStore.value = exp.store;
+        
+        currReceiptImg = exp.image || null;
+        if(currReceiptImg) {
+            receiptPreview.src = currReceiptImg;
+            receiptPreview.style.display = 'block';
+        } else {
+            receiptPreview.style.display = 'none';
+        }
+
+        receiptLinesContainer.innerHTML = '';
+        if(exp.items && exp.items.length > 0) {
+            exp.items.forEach(it => {
+                const id = 'line' + Date.now() + Math.random().toString().substr(2,4);
+                let rOpts = '<option value="" disabled>Välj Rum...</option>';
+                rOpts += `<option value="Övergripande (Hela bygget)" ${it.room === "Övergripande (Hela bygget)" ? 'selected' : ''}>Övergripande (Hela bygget)</option>`;
+                const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
+                const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
+                sortedRooms.forEach(r => rOpts += `<option value="${r.name}" ${it.room === r.name ? 'selected' : ''}>${r.name}</option>`);
+
+                let cOpts = '<option value="" disabled>Välj Kategori...</option>';
+                categories.forEach(c => cOpts += `<option value="${c}" ${it.cat === c ? 'selected' : ''}>${c}</option>`);
+
+                const html = `
+                    <div id="${id}" style="background:#F8FAFC;padding:12px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;position:relative;">
+                        <button type="button" onclick="document.getElementById('${id}').remove(); calcReceiptTotal();" style="position:absolute;top:10px;right:10px;color:var(--danger-color);background:none;border:none;cursor:pointer;"><i class="ph ph-trash" style="font-size:18px;"></i></button>
+                        <input type="number" class="input-field receipt-line-calc" placeholder="Belopp" style="margin-bottom:8px;font-weight:bold;width:80%;" value="${it.amount}" oninput="calcReceiptTotal()">
+                        <div style="display:flex;gap:8px;">
+                            <select class="input-field receipt-line-room" style="flex:1;">${rOpts}</select>
+                            <select class="input-field receipt-line-cat" style="flex:1;">${cOpts}</select>
+                        </div>
+                    </div>
+                `;
+                receiptLinesContainer.insertAdjacentHTML('beforeend', html);
+            });
+        } else {
+            addReceiptLine(); 
+        }
+
+        calcReceiptTotal();
+        formReceipt.style.display = 'block';
+        window.scrollTo(0, document.getElementById('view-finance').offsetTop);
+    };
 
 
     // ---- FINANCE TABS LOGIC ----
@@ -837,7 +915,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <div style="text-align:right;display:flex;align-items:center;gap:6px;">
                                 <div style="font-size:16px;font-weight:700;color:var(--primary-color);">${rec.amount.toLocaleString('sv-SE')} ${currentCurrency}</div>
-                                <i class="ph ph-caret-down" style="color:var(--text-muted);"></i>
+                                <span style="font-size:12px;color:var(--text-muted);display:flex;gap:4px;">
+                                    <button class="btn-icon" style="padding:0;background:none;border:none;cursor:pointer;" onclick="editExpense('${rec.id}'); event.stopPropagation();"><i class="ph ph-pencil-simple" style="font-size:18px;"></i></button>
+                                    <button class="btn-icon" style="padding:0;color:var(--danger-color);background:none;border:none;cursor:pointer;" onclick="deleteExpense('${rec.id}'); event.stopPropagation();"><i class="ph ph-trash" style="font-size:18px;"></i></button>
+                                    <i class="ph ph-caret-down" style="margin-left:4px;font-size:18px;"></i>
+                                </span>
                             </div>
                         </div>
                         ${rowsHtml}
@@ -917,6 +999,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             });
+        }
+
+        // ===== DASHBOARD AGENDA =====
+        const dashAgendaList = document.getElementById('dash-agenda-list');
+        if (dashAgendaList) {
+            let agendaHtml = '';
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            let ongoingTasks = tasks.filter(t => t.status === 'ongoing' || (t.start <= todayStr && t.end >= todayStr && t.status !== 'done'));
+            let upcomingTasks = tasks.filter(t => t.start > todayStr && t.status !== 'done' && !ongoingTasks.includes(t));
+            
+            upcomingTasks.sort((a,b) => new Date(a.start) - new Date(b.start));
+            upcomingTasks = upcomingTasks.slice(0, 2);
+
+            if(ongoingTasks.length === 0 && upcomingTasks.length === 0) {
+                agendaHtml = '<p style="font-size:12px;color:var(--text-muted);text-align:center;margin:0;padding:8px 0;">Inget planerat i närtid.</p>';
+            } else {
+                ongoingTasks.forEach(t => {
+                    agendaHtml += `
+                        <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #E2E8F0;">
+                            <div style="width:8px;height:8px;border-radius:50%;background:var(--warning-color);margin-right:12px;box-shadow:0 0 0 2px rgba(251, 191, 36, 0.2);"></div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room} &bull; ${t.cat}</div>
+                                <div style="font-size:11px;color:var(--text-muted);">Pågår t.o.m ${t.end}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                upcomingTasks.forEach(t => {
+                    agendaHtml += `
+                        <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #E2E8F0;">
+                            <div style="width:8px;height:8px;border-radius:50%;background:#CBD5E1;margin-right:12px;"></div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room} &bull; ${t.cat}</div>
+                                <div style="font-size:11px;color:var(--text-muted);">Startar ${t.start}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            dashAgendaList.innerHTML = agendaHtml;
         }
     };
 

@@ -78,7 +78,7 @@
 
 
             <div class="section-title">Nästa på agendan</div>
-            <div class="card timeline-preview">
+            <div class="card timeline-preview" id="dash-agenda-list">
                 <!-- Dynamiskt -->
             </div>
         </section>
@@ -262,9 +262,10 @@
                 </div>
                 
             <div class="card" id="form-receipt" style="display: none;">
-                <h3>Löpande Utgift</h3>
+                <h3 id="form-receipt-title">Löpande Utgift</h3>
+                <input type="hidden" id="edit-receipt-id">
                 
-                <div style="margin: 16px 0;" class="image-preview" id="receipt-preview-container">
+                <div style="margin: 16px 0; position: relative;" class="image-preview" id="receipt-preview-container">
                     <i class="ph ph-camera"></i>
                     <p>Fota kvittot</p>
                     <img id="receipt-preview" src="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:12px;">
@@ -290,7 +291,10 @@
                     <strong style="font-size:20px;color:var(--primary-color);" id="receipt-total-display">0 <span class="currency-symbol"></span></strong>
                 </div>
 
-                <button class="btn-primary w-full" id="btn-save-receipt" style="margin-top:20px;">Spara Utgift</button>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn-primary w-full" id="btn-save-receipt">Spara Utgift</button>
+                    <button class="btn-secondary w-full" id="btn-cancel-receipt" style="background:#E2E8F0;color:#0F172A;border:none;font-weight:600;display:none;">Avbryt</button>
+                </div>
             </div>
 
             <div id="receipt-list">
