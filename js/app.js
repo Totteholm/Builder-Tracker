@@ -34,6 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAll();
     };
 
+    window.getTrans = (selectId, val) => {
+        const el = document.querySelector(`#${selectId} option[value="${val}"]`);
+        if(el && el.hasAttribute('data-i18n')) {
+            return window.t(el.getAttribute('data-i18n'));
+        }
+        return val;
+    };
+
     // ---- DOM ELEMENTS ----
     const currencySelect = document.getElementById('currency-select');
     const navButtons = document.querySelectorAll('.nav-btn');
@@ -128,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let ganttOffsetWeeks = 0;
 
-    const categories = ['Golv', 'Väggar', 'Tak', 'Rör/Vent', 'El', 'Fastinredning', 'Byggmaterial', 'Färg/Spackel', 'Lister/Foder', 'Fönster/Dörrar', 'Arbetskostnader', 'Buffert', 'Rivning', 'Bygg'];
+    const categories = ['Golv', 'Väggar', 'Tak', 'Rör', 'Ventilation', 'El', 'Fastinredning', 'Byggmaterial', 'Färg/Spackel', 'Lister/Foder', 'Fönster/Dörrar', 'Arbetskostnader', 'Buffert', 'Rivning', 'Bygg'];
 
     // ---- INIT ----
     currencySelect.value = currentCurrency;
@@ -165,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteProject = (pid) => {
-        if(!confirm('Är du säker på att du vill radera projektet och all dess lagrade data?')) return;
+        if(!confirm(window.t('alert_del_project'))) return;
         localStorage.removeItem(pid + '_expenses');
         localStorage.removeItem(pid + '_receipts');
         localStorage.removeItem(pid + '_rooms');
@@ -175,16 +183,32 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
     };
 
-    btnNewProject.addEventListener('click', () => {
-        const pname = prompt('Ange namn på projektet:');
+    const modalNewProj = document.getElementById('modal-new-project');
+    const inputNewProj = document.getElementById('input-new-project-name');
+    
+    document.getElementById('btn-cancel-new-project').addEventListener('click', () => {
+        modalNewProj.style.display = 'none';
+        inputNewProj.value = '';
+    });
+
+    document.getElementById('btn-save-new-project').addEventListener('click', () => {
+        const pname = inputNewProj.value.trim();
         if(!pname) return;
+        modalNewProj.style.display = 'none';
+        inputNewProj.value = '';
+        
         const newProj = { id: 'proj_' + Date.now(), name: pname, date: new Date().toLocaleDateString('sv-SE') };
         projects.push(newProj);
         openProject(newProj.id);
     });
 
+    btnNewProject.addEventListener('click', () => {
+        modalNewProj.style.display = 'flex';
+        inputNewProj.focus();
+    });
+
     btnSwitchProject.addEventListener('click', () => {
-        activateView('view-projects', 'Mina Projekt');
+        activateView('view-projects', window.t('title_projects'));
         renderAll();
     });
 
@@ -196,14 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#form-room input:not([type="hidden"]), #form-room select').forEach(el => el.value = '');
         editRoomId.value = '';
         btnDeleteRoom.style.display = 'none';
-        formRoomTitle.innerText = "Definiera Rum";
+        formRoomTitle.innerText = window.t('title_define_room');
         formRoom.style.display = formRoom.style.display === 'none' ? 'block' : 'none';
     });
 
     document.getElementById('btn-save-room').addEventListener('click', () => {
         const floor = document.getElementById('room-floor').value;
         const type = document.getElementById('room-type').value;
-        if(!floor || !type) return alert('Vänligen välj Våning och Rum.');
+        if(!floor || !type) return alert(window.t('alert_req_room'));
 
         const l = parseFloat(document.getElementById('room-floor-length').value) || 0;
         const w = parseFloat(document.getElementById('room-floor-width').value) || 0;
@@ -242,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editRoomDetails = (roomId) => {
         const rm = rooms.find(r => r.id === roomId);
         if(!rm) return;
-        formRoomTitle.innerText = "Redigera " + rm.name;
+        formRoomTitle.innerText = window.t('title_edit') + " " + window.getTrans('room-floor', rm.floor) + " - " + window.getTrans('room-type', rm.type);
         editRoomId.value = rm.id;
         btnDeleteRoom.style.display = 'block';
         document.getElementById('room-floor').value = rm.floor;
@@ -262,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     btnDeleteRoom.addEventListener('click', () => {
-        if(!confirm('Radera detta rum och dess budgetkalkyler?')) return;
+        if(!confirm(window.t('alert_del_room'))) return;
         const id = editRoomId.value;
         rooms = rooms.filter(r => r.id !== id);
         delete roomBudgets[id]; 
@@ -277,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openBudgetForm = (roomId) => {
         const rm = rooms.find(r => r.id === roomId);
         if(!rm) return;
-        budgetRoomTitle.innerText = "Budget: " + rm.name;
+        budgetRoomTitle.innerText = window.t('title_budget') + ": " + window.getTrans('room-floor', rm.floor) + " - " + window.getTrans('room-type', rm.type);
         budgetInputs.roomId.value = roomId;
         const b = roomBudgets[roomId] || {};
         Object.keys(budgetInputs).forEach(k => { if(k!=='roomId') budgetInputs[k].value = b[k] || ''; });
@@ -315,11 +339,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addReceiptLine = () => {
         const id = 'line' + Date.now() + Math.random().toString().substr(2,4);
-        let rOpts = '<option value="" disabled selected>Välj Rum...</option>';
-        rOpts += `<option value="Övergripande (Hela bygget)">Övergripande (Hela bygget)</option>`;
+        let rOpts = `<option value="" disabled selected>${window.t('opt_room_sel')}</option>`;
+        rOpts += `<option value="Övergripande (Hela bygget)">${window.t('opt_all_rooms')}</option>`;
         const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
         const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
-        sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${r.name}</option>`);
+        sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
 
         let cOpts = '<option value="" disabled selected>Välj Kategori...</option>';
         categories.forEach(c => cOpts += `<option value="${c}">${c}</option>`);
@@ -382,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnSaveReceipt.addEventListener('click', () => {
-        if(!receiptStore.value) return alert('Du måste ange affär och totalsumma!');
+        if(!receiptStore.value) return alert(window.t('alert_req_store'));
         let items = [], total = 0, valid = true;
 
         document.querySelectorAll('.receipt-line-calc').forEach(el => {
@@ -395,8 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
             items.push({ amount: amt, room: r, cat: c });
         });
         
-        if(items.length === 0) return alert('Du måste ha minst en ifylld rad.');
-        if(!valid) return alert('Alla rader måste ha ett giltigt belopp, ett valt rum och en kategori.');
+        if(items.length === 0) return alert(window.t('alert_req_line'));
+        if(!valid) return alert(window.t('alert_req_valid_line'));
 
         const eid = document.getElementById('edit-receipt-id').value;
         if (eid) {
@@ -421,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.deleteExpense = (eid) => {
-        if(!confirm('Är du säker på att du vill ta bort denna utgift? Summan dras bort från kalkylen.')) return;
+        if(!confirm(window.t('alert_del_receipt'))) return;
         expenses = expenses.filter(e => e.id !== eid);
         saveState();
     };
@@ -448,14 +472,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if(exp.items && exp.items.length > 0) {
             exp.items.forEach(it => {
                 const id = 'line' + Date.now() + Math.random().toString().substr(2,4);
-                let rOpts = '<option value="" disabled>Välj Rum...</option>';
-                rOpts += `<option value="Övergripande (Hela bygget)" ${it.room === "Övergripande (Hela bygget)" ? 'selected' : ''}>Övergripande (Hela bygget)</option>`;
+                let rOpts = `<option value="" disabled>${window.t('opt_room_sel')}</option>`;
+                rOpts += `<option value="Övergripande (Hela bygget)" ${it.room === "Övergripande (Hela bygget)" ? 'selected' : ''}>${window.t('opt_all_rooms')}</option>`;
                 const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
                 const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
-                sortedRooms.forEach(r => rOpts += `<option value="${r.name}" ${it.room === r.name ? 'selected' : ''}>${r.name}</option>`);
+                sortedRooms.forEach(r => rOpts += `<option value="${r.name}" ${it.room === r.name ? 'selected' : ''}>${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
 
-                let cOpts = '<option value="" disabled>Välj Kategori...</option>';
-                categories.forEach(c => cOpts += `<option value="${c}" ${it.cat === c ? 'selected' : ''}>${c}</option>`);
+                let cOpts = `<option value="" disabled>Välj Kategori...</option>`;
+                categories.forEach(c => cOpts += `<option value="${c}" ${it.cat === c ? 'selected' : ''}>${window.t('cat_' + c)}</option>`);
 
                 const html = `
                     <div id="${id}" style="background:#F8FAFC;padding:12px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;position:relative;">
@@ -522,14 +546,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnAddTask.addEventListener('click', () => {
         formTask.style.display = formTask.style.display === 'none' ? 'block' : 'none';
-        document.getElementById('form-task-title').innerText = "Schemalägg Skede";
+        document.getElementById('form-task-title').innerText = window.t('title_schedule_phase');
         
         // Populate room dropdown seamlessly
         const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
         const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
-        let rOpts = '<option value="" disabled selected>Välj Rum...</option>';
-        rOpts += `<option value="ALLA">Övergripande / Alla Rum</option>`;
-        sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${r.name}</option>`);
+        let rOpts = `<option value="" disabled selected>${window.t('opt_room_sel')}</option>`;
+        rOpts += `<option value="ALLA">${window.t('opt_all_rooms')}</option>`;
+        sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
         taskRoom.innerHTML = rOpts;
 
         taskRoom.value = '';
@@ -542,8 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCancelTask.addEventListener('click', () => formTask.style.display = 'none');
 
     btnSaveTask.addEventListener('click', () => {
-        if(!taskRoom.value || !taskCat.value || !taskStart.value || !taskEnd.value) return alert('Du måste fylla i alla obligatoriska fält!');
-        if(new Date(taskStart.value) > new Date(taskEnd.value)) return alert('Måldatum kan inte vara före startdatum.');
+        if(!taskRoom.value || !taskCat.value || !taskStart.value || !taskEnd.value) return alert(window.t('alert_req_fields'));
+        if(new Date(taskStart.value) > new Date(taskEnd.value)) return alert(window.t('alert_date_order'));
 
         const eid = document.getElementById('edit-task-id').value;
         if (eid) {
@@ -582,13 +606,13 @@ document.addEventListener('DOMContentLoaded', () => {
         taskStart.value = t.start;
         taskEnd.value = t.end;
         taskStatus.value = t.status || 'pending';
-        document.getElementById('form-task-title').innerText = "Redigera Skede";
+        document.getElementById('form-task-title').innerText = window.t('title_edit_phase');
         formTask.style.display = 'block';
         window.scrollTo(0, document.getElementById('view-timeline').offsetTop);
     };
 
     window.deleteTask = (tid) => {
-        if(!confirm('Vill du ta bort detta skede från tidplanen?')) return;
+        if(!confirm(window.t('alert_del_phase'))) return;
         tasks = tasks.filter(t => t.id !== tid);
         saveState();
     };
@@ -639,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = `<div style="display:grid; grid-template-columns: 200px repeat(${totalWks}, 38px); border-left:1px solid #E2E8F0; border-top:1px solid #E2E8F0;">`;
         
         // Row 1: Headers
-        let headerRow = `<div style="background:#F8FAFC; border-right:1px solid #E2E8F0; border-bottom:1px solid #E2E8F0; padding:8px; font-size:11px; font-weight:600; color:var(--text-muted); position:sticky; left:0; z-index:2;">Rum / Skede</div>`;
+        let headerRow = `<div style="background:#F8FAFC; border-right:1px solid #E2E8F0; border-bottom:1px solid #E2E8F0; padding:8px; font-size:11px; font-weight:600; color:var(--text-muted); position:sticky; left:0; z-index:2;">${window.t('table_room_cat')}</div>`;
         const todayWk = getWeekNumber(new Date());
 
         let ptrD = new Date(minDate);
@@ -648,9 +672,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCurrentWk = (wkNum === todayWk && new Date().getFullYear() === ptrD.getFullYear());
             const bg = isCurrentWk ? 'var(--primary-color)' : '#F8FAFC';
             const color = isCurrentWk ? '#fff' : 'var(--text-primary)';
-            
+            const localeStr = window.currentLang === 'sv' ? 'sv-SE' : window.currentLang === 'fi' ? 'fi-FI' : 'en-US';
             headerRow += `<div style="background:${bg}; color:${color}; font-size:10px; font-weight:700; text-align:center; padding:8px 0; border-right:1px solid #E2E8F0; border-bottom:1px solid #E2E8F0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                <span style="font-size:8px;font-weight:400;margin-bottom:2px;opacity:0.8;">${ptrD.toLocaleString('sv-SE', {month:'short'})}</span>
+                <span style="font-size:8px;font-weight:400;margin-bottom:2px;opacity:0.8;">${ptrD.toLocaleString(localeStr, {month:'short'})}</span>
                 v${wkNum}
             </div>`;
             ptrD.setDate(ptrD.getDate() + 7);
@@ -660,8 +684,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Group Tasks into Flat Y-Axis
         let rowsMap = {};
         tasks.forEach(t => {
-            const roomName = t.room === 'ALLA' ? 'Alla Rum' : t.room;
-            const rowKey = `<strong style="color:var(--text-primary);">${roomName}</strong><br><span style="color:var(--primary-color);">${t.cat}</span>`;
+            let roomNameDisplay = t.room;
+            if(t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)') {
+                roomNameDisplay = window.t('opt_all_rooms');
+            } else {
+                const rmObj = rooms.find(r => r.name === t.room);
+                if (rmObj) {
+                    roomNameDisplay = window.getTrans('room-floor', rmObj.floor) + ' - ' + window.getTrans('room-type', rmObj.type);
+                }
+            }
+            const catKey = t.cat === 'Rör/Vent' ? 'cat_rör' : ('cat_' + t.cat);
+            const rowKey = `<strong style="color:var(--text-primary);">${roomNameDisplay}</strong><br><span style="color:var(--primary-color);">${window.t(catKey)}</span>`;
             
             // Unique ID to merge identical room+cat combos to one line visually
             const logicKey = t.room + '_' + t.cat;
@@ -708,17 +741,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        if(flatRows.length === 0) {
-            html += `<div style="grid-column: 1 / -1; padding:20px; font-size:12px; color:var(--text-muted); text-align:center;">Inga skeden inlagda än. Gå till Kalender-data för att lägga till.</div>`;
+        if(tasks.length === 0) {
+            html += `<div style="grid-column: 1 / -1; padding:20px; font-size:12px; color:var(--text-muted); text-align:center;">${window.t('empty_gantt')}</div>`;
         }
 
         html += `</div>`; // End Grid
         ganttContainer.innerHTML = html;
-        ganttMonthLabel.innerText = "Projektkalender";
+        ganttMonthLabel.innerText = window.t('tab_calendar_project');
     };
 
 
     // ---- RENDER LOGIC ----
+    window.viewImageFull = (src) => {
+        document.getElementById('image-modal-img').src = src;
+        document.getElementById('image-modal').style.display = 'flex';
+    };
+
     window.toggleSummaryDetails = (el) => {
         const tgt = el.nextElementSibling;
         if(tgt && tgt.style.display === 'none') tgt.style.display = 'block';
@@ -727,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderAll = () => {
         if (!currentProjectId) {
-            projectList.innerHTML = projects.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;">Inga projekt skapade. Skapa ditt första projekt ovan!</p>' : '';
+            projectList.innerHTML = projects.length === 0 ? `<p style="color:var(--text-muted);font-size:14px;">${window.t('empty_projects')}</p>` : '';
             projects.forEach(p => {
                 projectList.innerHTML += `
                     <div class="card" style="margin-bottom:12px; padding:16px;">
@@ -841,7 +879,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        budgetList.innerHTML = rooms.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;">För att skapa en budget måste du först definiera dina rum under fliken "Mått".</p>' : '';
+        budgetList.innerHTML = rooms.length === 0 ? `<p style="color:var(--text-muted);font-size:14px;">${window.t('empty_budget')}</p>` : '';
         rooms.forEach(rm => {
             const b = roomBudgets[rm.id];
             const sum = b ? b.totalCalculated.toLocaleString('sv-SE') : '0';
@@ -850,8 +888,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card" style="margin-bottom:12px; padding:16px; cursor:pointer;" onclick="openBudgetForm('${rm.id}')">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <div>
-                            <h4 style="font-size:16px;font-weight:600;">${rm.name}</h4>
-                            <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Klicka för att sätta m²-pris m.m.</p>
+                            <h4 style="font-size:16px;font-weight:600;">${window.getTrans('room-floor', rm.floor)} - ${window.getTrans('room-type', rm.type)}</h4>
+                            <p style="font-size:12px;color:var(--text-muted);margin-top:2px;" data-i18n="desc_room">${window.t('desc_room')}</p>
                         </div>
                         <div style="text-align:right;">
                             <span style="display:block;font-size:10px;color:${isSet};text-transform:uppercase;font-weight:700;">Totalt</span>
@@ -862,29 +900,29 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         });
 
-        roomList.innerHTML = rooms.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;">Inga rumsdimensioner inlagda än.</p>' : '';
+        roomList.innerHTML = rooms.length === 0 ? `<p style="color:var(--text-muted);font-size:14px;">${window.t('empty_rooms')}</p>` : '';
         rooms.forEach(rm => {
             roomList.innerHTML += `
                 <div class="card" style="margin-bottom:12px; padding:16px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color);padding-bottom:8px;margin-bottom:8px;">
                         <div>
-                            <h4 style="font-size:16px;font-weight:600;color:var(--primary-color);">${rm.type}</h4>
-                            <span style="font-size:12px;color:var(--text-muted);font-weight:500;">${rm.floor}</span>
+                            <h4 style="font-size:16px;font-weight:600;color:var(--primary-color);">${window.getTrans('room-type', rm.type)}</h4>
+                            <span style="font-size:12px;color:var(--text-muted);font-weight:500;">${window.getTrans('room-floor', rm.floor)}</span>
                         </div>
                         <button style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;" onclick="editRoomDetails('${rm.id}')">
                             <i class="ph ph-pencil-simple" style="font-size:20px;"></i>
                         </button>
                     </div>
                     <div class="room-area">
-                        <div><span>Golv</span><strong>${rm.areas.floor} m²</strong></div>
-                        <div><span>Väggar</span><strong>${rm.areas.wall} m²</strong></div>
-                        <div><span>Tak</span><strong>${rm.areas.ceiling} m²</strong></div>
+                        <div><span>${window.t('lbl_floor')}</span><strong>${rm.areas.floor} m²</strong></div>
+                        <div><span>${window.t('lbl_walls')}</span><strong>${rm.areas.wall} m²</strong></div>
+                        <div><span>${window.t('lbl_ceiling')}</span><strong>${rm.areas.ceiling} m²</strong></div>
                     </div>
                 </div>
             `;
         });
 
-        receiptList.innerHTML = expenses.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;">Inga utgifter sparade än.</p>' : '';
+        receiptList.innerHTML = expenses.length === 0 ? `<p style="color:var(--text-muted);font-size:14px;">${window.t('receipt_no_data')}</p>` : '';
         const revExp = [...expenses].reverse();
         revExp.forEach(rec => {
             let rowsHtml = '';
@@ -892,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 rowsHtml = `<div style="margin-top:6px; display:none;">`;
                 rec.items.forEach(it => {
                     rowsHtml += `<div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;border-bottom:1px solid #E2E8F0;padding:4px 0;">
-                        <span><strong style="color:var(--text-primary);">${it.cat}</strong> i ${it.room}</span>
+                        <span><strong style="color:var(--text-primary);">${window.t('cat_' + it.cat)}</strong> i ${it.room === 'ALLA' || it.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : it.room}</span>
                         <strong style="color:var(--primary-color);">${it.amount.toLocaleString('sv-SE')} ${currentCurrency}</strong>
                     </div>`;
                 });
@@ -902,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 rowsHtml = `<div style="margin-top:4px; display:none;">${tags}</div>`;
             }
 
-            const imgHTML = rec.image ? `<img src="${rec.image}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;margin-right:12px;">` : `<div style="width:48px;height:48px;background:#F1F5F9;border-radius:8px;margin-right:12px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i class="ph ph-receipt" style="font-size:24px;"></i></div>`;
+            const imgHTML = rec.image ? `<img src="${rec.image}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;margin-right:12px;cursor:pointer;" onclick="viewImageFull('${rec.image}')">` : `<div style="width:48px;height:48px;background:#F1F5F9;border-radius:8px;margin-right:12px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i class="ph ph-receipt" style="font-size:24px;"></i></div>`;
             
             receiptList.innerHTML += `
                 <div class="receipt-item-flex" style="align-items:flex-start;display:flex;padding:12px 16px;background:#fff;border:1px solid #E2E8F0;border-radius:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
@@ -933,12 +971,14 @@ document.addEventListener('DOMContentLoaded', () => {
         expenses.forEach(exp => {
             if(exp.items) {
                 exp.items.forEach(it => {
-                    if(catSpent[it.cat] !== undefined) catSpent[it.cat] += it.amount;
+                    let cName = it.cat === 'Rör/Vent' ? 'Rör' : it.cat;
+                    if(catSpent[cName] !== undefined) catSpent[cName] += it.amount;
                 });
             } else if (exp.cats) {
                 const amtPerCat = exp.amount / (exp.cats.length || 1);
                 exp.cats.forEach(c => {
-                    if(catSpent[c] !== undefined) catSpent[c] += amtPerCat;
+                    let cName = c === 'Rör/Vent' ? 'Rör' : c;
+                    if(catSpent[cName] !== undefined) catSpent[cName] += amtPerCat;
                 });
             }
         });
@@ -956,7 +996,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 varHtml += `
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:8px 0;">
                         <div style="flex:1;">
-                            <div style="font-size:13px; font-weight:600; color:var(--text-primary);">${c}</div>
+                            <div style="font-size:13px; font-weight:600; color:var(--text-primary);">${window.t('cat_' + c)}</div>
                             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Budget: ${b.toLocaleString('sv-SE')} | Utfall: ${s.toLocaleString('sv-SE')}</div>
                         </div>
                         <div style="font-weight:700; font-size:15px; color:${color}; text-align:right;">
@@ -973,13 +1013,12 @@ document.addEventListener('DOMContentLoaded', () => {
         taskListFull.innerHTML = '';
         const fCat = taskFilterCat.value;
         const statusColors = { pending: '#CBD5E1', ongoing: 'var(--warning-color)', done: 'var(--success-color)' };
-        const statusText = { pending: 'Ej påbörjad', ongoing: 'Pågår', done: 'Klar' };
+        const statusText = { pending: window.t('stat_pending'), ongoing: window.t('stat_ongoing'), done: window.t('stat_done') };
         
-        let filteredTasks = [...tasks];
-        if(fCat !== 'ALLA') filteredTasks = filteredTasks.filter(t => t.cat === fCat);
+        const filteredTasks = (fCat && fCat !== 'ALLA') ? tasks.filter(t => t.cat === fCat) : tasks;
         
         if (filteredTasks.length === 0) {
-            taskListFull.innerHTML = `<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">Inga skeden i listan.</p>`;
+            taskListFull.innerHTML = `<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">${window.t('empty_tasks')}</p>`;
         } else {
             // Sort by start date
             filteredTasks.sort((a,b) => new Date(a.start) - new Date(b.start));
@@ -988,8 +1027,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 taskListFull.innerHTML += `
                     <div style="background:#fff; border:1px solid #E2E8F0; border-radius:8px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:2px;">${t.room} &bull; <span style="color:${statusColors[t.status]};">${statusText[t.status]}</span></div>
-                            <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">${t.cat}</div>
+                            <div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:2px;">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; <span style="color:${statusColors[t.status]};">${statusText[t.status]}</span></div>
+                            <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">${window.t('cat_' + t.cat)}</div>
                             <div style="font-size:11px; color:var(--text-muted);"><i class="ph ph-calendar"></i> ${t.start} <i class="ph ph-arrow-right"></i> ${t.end}</div>
                         </div>
                         <div>
@@ -1014,15 +1053,15 @@ document.addEventListener('DOMContentLoaded', () => {
             upcomingTasks = upcomingTasks.slice(0, 2);
 
             if(ongoingTasks.length === 0 && upcomingTasks.length === 0) {
-                agendaHtml = '<p style="font-size:12px;color:var(--text-muted);text-align:center;margin:0;padding:8px 0;">Inget planerat i närtid.</p>';
+                agendaHtml = `<p style="font-size:12px;color:var(--text-muted);text-align:center;margin:0;padding:8px 0;">${window.t('agenda_empty')}</p>`;
             } else {
                 ongoingTasks.forEach(t => {
                     agendaHtml += `
                         <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #E2E8F0;">
                             <div style="width:8px;height:8px;border-radius:50%;background:var(--warning-color);margin-right:12px;box-shadow:0 0 0 2px rgba(251, 191, 36, 0.2);"></div>
                             <div style="flex:1;">
-                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room} &bull; ${t.cat}</div>
-                                <div style="font-size:11px;color:var(--text-muted);">Pågår t.o.m ${t.end}</div>
+                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; ${window.t('cat_' + t.cat)}</div>
+                                <div style="font-size:11px;color:var(--text-muted);">${window.t('agenda_ongoing')} ${t.end}</div>
                             </div>
                         </div>
                     `;
@@ -1032,8 +1071,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #E2E8F0;">
                             <div style="width:8px;height:8px;border-radius:50%;background:#CBD5E1;margin-right:12px;"></div>
                             <div style="flex:1;">
-                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room} &bull; ${t.cat}</div>
-                                <div style="font-size:11px;color:var(--text-muted);">Startar ${t.start}</div>
+                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; ${window.t('cat_' + t.cat)}</div>
+                                <div style="font-size:11px;color:var(--text-muted);">${window.t('agenda_starts')} ${t.start}</div>
                             </div>
                         </div>
                     `;

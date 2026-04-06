@@ -21,12 +21,19 @@
     <header class="app-header">
         <div style="display:flex;align-items:center;">
             <button class="btn-icon" id="btn-switch-project" style="margin-right:8px;display:none;"><i class="ph ph-squares-four"></i></button>
-            <h1 id="page-title">Mina Projekt</h1>
+            <h1 id="page-title" data-i18n="title_projects">Mina Projekt</h1>
         </div>
-        <select id="currency-select" class="currency-select">
-            <option value="€">EUR (€)</option>
-            <option value="kr">SEK (kr)</option>
-        </select>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <select id="lang-select" class="currency-select" onchange="window.setLang(this.value)" style="padding-right:20px;">
+                <option value="sv">🇸🇪</option>
+                <option value="en">🇬🇧</option>
+                <option value="fi">🇫🇮</option>
+            </select>
+            <select id="currency-select" class="currency-select">
+                <option value="€">EUR (€)</option>
+                <option value="kr">SEK (kr)</option>
+            </select>
+        </div>
     </header>
 
     <!-- App Content Wrapper -->
@@ -35,12 +42,12 @@
         <!-- View: Projektväljaren -->
         <section id="view-projects" class="view active-view">
             <div class="section-header">
-                <h2>Mina Byggprojekt</h2>
+                <h2 data-i18n="title_projects">Mina Byggprojekt</h2>
             </div>
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Välj ett aktivt projekt eller skapa ett nytt.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;" data-i18n="desc_projects">Välj ett aktivt projekt eller skapa ett nytt.</p>
             
             <div class="card" style="background:var(--primary-color);color:#fff;cursor:pointer;" id="btn-new-project">
-                <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;padding:8px 0;">
+                <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;padding:8px 0;" data-i18n="btn_new_project">
                     <i class="ph ph-plus-circle" style="font-size:24px;"></i> Skapa Nytt Projekt
                 </div>
             </div>
@@ -48,36 +55,48 @@
             <div id="project-list" style="margin-top:16px;">
                 <!-- Dynamiskt innehåll med alla projekt -->
             </div>
+
+            <!-- Custom Project Prompt Modal -->
+            <div id="modal-new-project" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+                <div style="background:#fff; border-radius:12px; width:90%; max-width:400px; padding:24px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                    <h3 style="font-size:18px; font-weight:700; margin-bottom:12px;" data-i18n="btn_new_project">Nytt Projekt</h3>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" data-i18n="prompt_new_project">Ange namn på projektet:</p>
+                    <input type="text" id="input-new-project-name" class="input-field" style="margin-bottom:20px;" autocomplete="off">
+                    <div style="display:flex; justify-content:flex-end; gap:12px;">
+                        <button class="btn-secondary" id="btn-cancel-new-project" style="background:#E2E8F0; border:none; padding:8px 16px; border-radius:8px; font-weight:600; color:#0F172A;" data-i18n="btn_cancel">Avbryt</button>
+                        <button class="btn-primary" id="btn-save-new-project" style="padding:8px 16px; border-radius:8px;" data-i18n="btn_save">Spara</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- View: Översikt -->
         <section id="view-dashboard" class="view">
             <div class="card summary-card">
-                <h2>Total Budget</h2>
+                <h2 data-i18n="title_total_budget">Total Budget</h2>
                 <div class="budget-big" id="dash-total">0 <span class="currency-symbol">€</span></div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="dash-progress" style="width: 0%;"></div>
                 </div>
                 <div class="summary-stats">
                     <div class="stat-box">
-                        <span class="stat-label">Spenderat</span>
+                        <span class="stat-label" data-i18n="lbl_spent">Spenderat</span>
                         <span class="stat-value" id="dash-spent">0 <span class="currency-symbol"></span></span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-label">Utnyttjat</span>
+                        <span class="stat-label" data-i18n="lbl_used">Utnyttjat</span>
                         <span class="stat-value"><span id="dash-percentage">0</span>%</span>
                     </div>
                 </div>
                 <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); cursor: pointer;" id="btn-edit-total-budget" style="display:none;"></div>
                 <div id="edit-budget-container" style="display: none; margin-top: 10px;">
                     <input type="number" id="input-total-budget" class="input-field" placeholder="Ny totalbudget">
-                    <button class="btn-primary w-full" id="btn-save-total-budget" style="padding: 8px;">Spara</button>
+                    <button class="btn-primary w-full" id="btn-save-total-budget" style="padding: 8px;" data-i18n="btn_save">Spara</button>
                 </div>
             </div>
             
 
-
-            <div class="section-title">Nästa på agendan</div>
+            <div class="section-title" data-i18n="title_agenda">Nästa på agendan</div>
             <div class="card timeline-preview" id="dash-agenda-list">
                 <!-- Dynamiskt -->
             </div>
@@ -86,48 +105,48 @@
         <!-- View: Budget (Rumsbaserad kalkyl) -->
         <section id="view-budget" class="view">
             <div class="section-header">
-                <h2>Rumsbudget & Kalkyl</h2>
+                <h2 data-i18n="title_budget">Rumsbudget & Kalkyl</h2>
             </div>
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Klicka på ett rum nedan för att budgetera ytskikt/material per m² samt fasta uppskattningar.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;" data-i18n="desc_budget">Klicka på ett rum nedan för att budgetera ytskikt/material per m² samt fasta uppskattningar.</p>
 
             <div class="card summary-card" id="budget-summary-box" style="margin-bottom: 16px; padding: 16px; display: none;">
                 <!-- Fylls från JS -->
             </div>
             
             <div class="card" id="form-room-budget" style="display: none;">
-                <h3 id="budget-room-title">Hantera Budget</h3>
+                <h3 id="budget-room-title" data-i18n="title_manage_budget">Hantera Budget</h3>
                 <input type="hidden" id="b-room-id">
                 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;">Ytskikt (Pris/M²)</div>
+                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_surfaces">Ytskikt (Pris/M²)</div>
                 <div style="display:flex;gap:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Golvpris</label><input type="number" id="b-floor-price" class="input-field" step="1"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Väggpris</label><input type="number" id="b-wall-price" class="input-field" step="1"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Takpris</label><input type="number" id="b-ceil-price" class="input-field" step="1"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_floor">Golvpris</label><input type="number" id="b-floor-price" class="input-field" step="1"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_wall">Väggpris</label><input type="number" id="b-wall-price" class="input-field" step="1"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_ceiling">Takpris</label><input type="number" id="b-ceil-price" class="input-field" step="1"></div>
                 </div>
 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;">Fasta Uppskattningar (Totalsummor)</div>
+                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_fixed_estimates">Fasta Uppskattningar (Totalsummor)</div>
                 <div style="display:flex;gap:10px;margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Rör</label><input type="number" id="b-pipes" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Ventilation</label><input type="number" id="b-vent" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">El</label><input type="number" id="b-elec" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_pipes">Rör</label><input type="number" id="b-pipes" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_vent">Ventilation</label><input type="number" id="b-vent" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_elec">El</label><input type="number" id="b-elec" class="input-field"></div>
                 </div>
                 <div style="display:flex;gap:10px;margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Fastinredning</label><input type="number" id="b-fit" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Byggmaterial</label><input type="number" id="b-mat" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Färg etc</label><input type="number" id="b-paint" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_fit">Fastinredning</label><input type="number" id="b-fit" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_mat">Byggmaterial</label><input type="number" id="b-mat" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_paint">Färg etc</label><input type="number" id="b-paint" class="input-field"></div>
                 </div>
                 <div style="display:flex;gap:10px;margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Lister/Foder</label><input type="number" id="b-trim" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Fönster/Dörr</label><input type="number" id="b-door" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);">Arbetskostnader</label><input type="number" id="b-ext" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_trim">Lister/Foder</label><input type="number" id="b-trim" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_door">Fönster/Dörr</label><input type="number" id="b-door" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_ext">Arbetskostnader</label><input type="number" id="b-ext" class="input-field"></div>
                 </div>
                 <div style="display:flex;gap:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);font-weight:600;">Oförutsedda utg. / Buffert</label><input type="number" id="b-unexp" class="input-field"></div>
+                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);font-weight:600;" data-i18n="lbl_unexp">Oförutsedda utg. / Buffert</label><input type="number" id="b-unexp" class="input-field"></div>
                 </div>
 
                 <div style="display:flex;gap:10px;">
-                    <button class="btn-primary w-full" id="btn-save-room-budget" style="margin-top:16px;">Spara Rumsbudget</button>
-                    <button class="btn-secondary w-full" id="btn-cancel-room-budget" style="margin-top:16px;background:#E2E8F0;color:#0F172A;border:none;border-radius:var(--radius-md);font-weight:600;">Avbryt</button>
+                    <button class="btn-primary w-full" id="btn-save-room-budget" style="margin-top:16px;" data-i18n="btn_save_budget">Spara Rumsbudget</button>
+                    <button class="btn-secondary w-full" id="btn-cancel-room-budget" style="margin-top:16px;background:#E2E8F0;color:#0F172A;border:none;border-radius:var(--radius-md);font-weight:600;" data-i18n="btn_cancel">Avbryt</button>
                 </div>
             </div>
 
@@ -136,75 +155,147 @@
             </div>
         </section>
 
+        <!-- View: Ekonomi/Utgifter -->
+        <section id="view-finance" class="view">
+            
+            <div class="section-header">
+                <h2 data-i18n="title_finance">Ekonomi & Utgifter</h2>
+            </div>
+
+            <div style="display:flex; border-bottom:1px solid var(--border-color); margin-bottom:16px;">
+                <button id="tab-btn-finance-variance" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid var(--primary-color); font-weight:600; color:var(--primary-color);" data-i18n="tab_finance_variance">Uppföljning</button>
+                <button id="tab-btn-finance-receipts" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid transparent; font-weight:600; color:var(--text-muted);" data-i18n="tab_finance_receipts">Kvitton / Utgifter</button>
+            </div>
+
+            <!-- Tab 1: Budgetuppföljning -->
+            <div id="tab-finance-variance">
+                <div class="card" style="margin-bottom: 20px;">
+                    <h3 style="font-size:16px;margin-bottom:8px;" data-i18n="title_variance">Ekonomisk Uppföljning per Kategori</h3>
+                    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;" data-i18n="desc_variance">Grönt betyder återstående pott, Rött betyder överskriden budget.</p>
+                    <div id="dash-category-variance">
+                        <!-- Fylls från JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Kvitton -->
+            <div id="tab-finance-receipts" style="display:none;">
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <p style="font-size:13px;color:var(--text-muted);margin:0;" data-i18n="desc_receipts">Spara dina löpande kvitton och utgifter här. Systemet delar upp det automatiskt.</p>
+            </div>
+
+            <button class="btn-primary w-full" id="btn-add-receipt" style="margin-bottom:16px;" data-i18n="btn_add_receipt"><i class="ph ph-plus"></i> Ny Utgift</button>
+
+            <!-- Kvitto/Utgifts Form -->
+            <div class="card" id="form-receipt" style="display:none;margin-bottom:16px;border:1px solid var(--primary-color);">
+                <h3 data-i18n="receipt_form_title">Löpande Utgift</h3>
+                <input type="hidden" id="edit-receipt-id">
+                
+                <div style="margin: 16px 0; position: relative;" class="image-preview" id="receipt-preview-container">
+                    <i class="ph ph-camera"></i>
+                    <p data-i18n="lbl_photo_receipt">Fota kvittot</p>
+                    <img id="receipt-preview" src="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:12px;">
+                    <input type="file" accept="image/*" capture="environment" id="receipt-upload" style="display:none;">
+                </div>
+
+                <input type="text" id="receipt-store" placeholder="Byggvaruhus / Leverantör" data-i18n-placeholder="ph_store" class="input-field" style="margin-bottom:16px;">
+                
+                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px 0;display:flex;justify-content:space-between;align-items:center;">
+                    <span data-i18n="lbl_spec">Specifikation (Rader)</span>
+                </div>
+                
+                <div id="receipt-lines-container">
+                    <!-- Fylls dynamiskt från JS -->
+                </div>
+                
+                <button id="btn-add-receipt-line" class="btn-secondary w-full" style="margin-top:12px;font-size:13px;padding:8px;border:2px dashed var(--primary-color);color:var(--primary-color);font-weight:600;background:transparent;" data-i18n="btn_add_line">
+                    + Lägg till Kvitto-rad
+                </button>
+
+                <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:14px;font-weight:600;color:var(--text-muted);" data-i18n="lbl_total_receipt">Summa Kvitto:</span>
+                    <strong style="font-size:20px;color:var(--primary-color);" id="receipt-total-display">0 <span class="currency-symbol"></span></strong>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn-primary w-full" id="btn-save-receipt" data-i18n="btn_save">Spara Utgift</button>
+                    <button class="btn-secondary w-full" id="btn-cancel-receipt" style="background:#E2E8F0;color:#0F172A;border:none;border-radius:var(--radius-md);font-weight:600;" data-i18n="btn_cancel">Avbryt</button>
+                </div>
+            </div>
+
+            <div id="receipt-list">
+                <!-- Expenses rendered here -->
+            </div>
+            
+            </div> <!-- End Tab 2 -->
+        </section>
 
         <!-- View: Tidplan -->
         <section id="view-timeline" class="view">
-            <div class="section-header">
-                <h2>Tidplan</h2>
-            </div>
-            
             <div style="display:flex; border-bottom:1px solid var(--border-color); margin-bottom:16px;">
-                <button id="tab-btn-timeline-data" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid var(--primary-color); font-weight:600; color:var(--primary-color);">Kalender-data</button>
-                <button id="tab-btn-timeline-gantt" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid transparent; font-weight:600; color:var(--text-muted);">Projektkalender</button>
+                <button id="tab-btn-timeline-gantt" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid var(--primary-color); font-weight:600; color:var(--primary-color);" data-i18n="tab_calendar_project">Projektkalender</button>
+                <button id="tab-btn-timeline-data" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid transparent; font-weight:600; color:var(--text-muted);" data-i18n="tab_calendar_data">Kalender-data</button>
             </div>
 
             <!-- Tab 1: Datainmatning -->
-            <div id="tab-timeline-data">
-                <button class="btn-primary w-full" id="btn-add-task" style="margin-bottom:16px;">+ Nytt Skede i Kalender</button>
+            <div id="tab-timeline-data" style="display:none;">
+                <button class="btn-primary w-full" id="btn-add-task" style="margin-bottom:16px;" data-i18n="btn_add_phase"><i class="ph ph-plus"></i> Lägg till skede</button>
                 
-                <div class="card" id="form-task" style="display: none; margin-bottom: 16px;">
-                    <h3 id="form-task-title">Schemalägg Skede</h3>
+                <!-- Task Form -->
+                <div class="card" id="form-task" style="display:none;margin-bottom:16px;">
+                    <h3 id="form-task-title" data-i18n="title_schedule_phase">Schemalägg Skede</h3>
                     <input type="hidden" id="edit-task-id">
                     
-                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;">1. Koppla till Rum</div>
+                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;" data-i18n="lbl_connect_room">1. Koppla till Rum</div>
                     <select id="task-room" class="input-field" style="margin-bottom:16px;">
                         <!-- Fylls från JS -->
                     </select>
                     
-                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;">2. Välj Kategori</div>
+                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;" data-i18n="lbl_select_cat">2. Välj Kategori</div>
                     <select id="task-cat" class="input-field" style="margin-bottom:16px;">
-                        <option value="" disabled selected>Välj...</option>
-                        <option value="Rivning">Rivning</option>
-                        <option value="Bygg">Bygg</option>
-                        <option value="Golv">Golv</option>
-                        <option value="Väggar">Väggar</option>
-                        <option value="Tak">Tak</option>
-                        <option value="Rör/Vent">Rör/Vent</option>
-                        <option value="El">El</option>
-                        <option value="Fastinredning">Fastinredning</option>
+                        <option value="" disabled selected data-i18n="opt_cat_sel">Välj...</option>
+                        <option value="Rivning" data-i18n="cat_rivning">Rivning</option>
+                        <option value="Bygg" data-i18n="cat_bygg">Bygg</option>
+                        <option value="Golv" data-i18n="cat_golv">Golv</option>
+                        <option value="Väggar" data-i18n="cat_väggar">Väggar</option>
+                        <option value="Tak" data-i18n="cat_tak">Tak</option>
+                        <option value="Rör/Vent" data-i18n="cat_rör">Rör/Vent</option>
+                        <option value="El" data-i18n="cat_el">El</option>
+                        <option value="Fastinredning" data-i18n="cat_fastinredning">Fastinredning</option>
                     </select>
 
-                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;">3. Tidsperiod (Dagar)</div>
+                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;" data-i18n="lbl_period">3. Tidsperiod (Dagar)</div>
                     <div style="display:flex; gap:10px; margin-bottom:16px;">
-                        <div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);">Start</label><input type="date" id="task-start" class="input-field"></div>
-                        <div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);">Slut</label><input type="date" id="task-end" class="input-field"></div>
+                        <div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);" data-i18n="lbl_start">Start</label><input type="date" id="task-start" class="input-field"></div>
+                        <div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);" data-i18n="lbl_end">Slut</label><input type="date" id="task-end" class="input-field"></div>
                     </div>
                     
-                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;">Status</div>
+                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;" data-i18n="lbl_status">Status</div>
                     <select id="task-status" class="input-field" style="margin-bottom:16px;">
-                        <option value="pending">Ej påbörjad</option>
-                        <option value="ongoing">Pågår</option>
-                        <option value="done">Klar</option>
+                        <option value="pending" data-i18n="stat_pending">Ej påbörjad</option>
+                        <option value="ongoing" data-i18n="stat_ongoing">Pågår</option>
+                        <option value="done" data-i18n="stat_done">Klar</option>
                     </select>
 
                     <div style="display:flex; gap:10px;">
-                        <button class="btn-primary w-full" id="btn-save-task">Spara Skede</button>
-                        <button class="btn-secondary w-full" id="btn-cancel-task" style="background:#E2E8F0;color:#0F172A;border:none;font-weight:600;">Avbryt</button>
+                        <button class="btn-primary w-full" id="btn-save-task" data-i18n="btn_save">Spara Skede</button>
+                        <button class="btn-secondary w-full" id="btn-cancel-task" style="background:#E2E8F0;color:#0F172A;border:none;font-weight:600;" data-i18n="btn_cancel">Avbryt</button>
                     </div>
                 </div>
 
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <div style="font-size:14px;font-weight:600;color:var(--text-muted);">Inlagda Skeden</div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-muted);" data-i18n="lbl_tasks">Inlagda Skeden</div>
                     <select id="task-filter-cat" class="input-field" style="width:140px;padding:4px 8px;font-size:12px;margin:0;">
-                        <option value="ALLA">Visa Alla</option>
-                        <option value="Rivning">Rivning</option>
-                        <option value="Bygg">Bygg</option>
-                        <option value="Golv">Golv</option>
-                        <option value="Väggar">Väggar</option>
-                        <option value="Tak">Tak</option>
-                        <option value="Rör/Vent">Rör/Vent</option>
-                        <option value="El">El</option>
-                        <option value="Fastinredning">Fastinredning</option>
+                        <option value="ALLA" data-i18n="cat_alla">Visa Alla</option>
+                        <option value="Rivning" data-i18n="cat_rivning">Rivning</option>
+                        <option value="Bygg" data-i18n="cat_bygg">Bygg</option>
+                        <option value="Golv" data-i18n="cat_golv">Golv</option>
+                        <option value="Väggar" data-i18n="cat_väggar">Väggar</option>
+                        <option value="Tak" data-i18n="cat_tak">Tak</option>
+                        <option value="Rör/Vent" data-i18n="cat_rör">Rör/Vent</option>
+                        <option value="El" data-i18n="cat_el">El</option>
+                        <option value="Fastinredning" data-i18n="cat_fastinredning">Fastinredning</option>
                     </select>
                 </div>
                 
@@ -214,12 +305,12 @@
             </div>
 
             <!-- Tab 2: Gantt Schema -->
-            <div id="tab-timeline-gantt" style="display:none;">
+            <div id="tab-timeline-gantt">
                 <div class="card" style="padding:12px; overflow-x: auto; background:#fff;">
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <button class="btn-icon" id="btn-gantt-prev" style="background:#F1F5F9; border-radius:4px;"><i class="ph ph-caret-left"></i></button>
-                        <div id="gantt-month-label" style="font-size:16px;margin:0;font-weight:700;color:var(--primary-color);">Schemavy</div>
+                        <div id="gantt-month-label" style="font-size:16px;margin:0;font-weight:700;color:var(--primary-color);" data-i18n="lbl_gantt_view">Schemavy</div>
                         <button class="btn-icon" id="btn-gantt-next" style="background:#F1F5F9; border-radius:4px;"><i class="ph ph-caret-right"></i></button>
                     </div>
 
@@ -232,152 +323,79 @@
 
         </section>
 
-        <!-- View: Ekonomi & Utgifter -->
-        <section id="view-finance" class="view">
-            <div class="section-header">
-                <h2>Ekonomi & Utgifter</h2>
-            </div>
-            
-            <div style="display:flex; border-bottom:1px solid var(--border-color); margin-bottom:16px;">
-                <button id="tab-btn-finance-variance" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid var(--primary-color); font-weight:600; color:var(--primary-color);">Uppföljning</button>
-                <button id="tab-btn-finance-receipts" style="padding:12px 16px; background:none; border:none; border-bottom:2px solid transparent; font-weight:600; color:var(--text-muted);">Kvitton / Utgifter</button>
-            </div>
-
-            <!-- Tab 1: Budgetuppföljning -->
-            <div id="tab-finance-variance">
-                <div class="card" style="margin-bottom: 20px;">
-                    <h3 style="font-size:16px;margin-bottom:8px;">Ekonomisk Uppföljning per Kategori</h3>
-                    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Grönt betyder återstående pott, Rött betyder överskriden budget.</p>
-                    <div id="dash-category-variance">
-                        <!-- Fylls från JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 2: Kvitton -->
-            <div id="tab-finance-receipts" style="display:none;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <p style="font-size:13px;color:var(--text-muted);margin:0;">Spara dina utgifter här.</p>
-                    <button class="btn-primary" id="btn-add-receipt" style="padding:6px 12px;font-size:12px;">+ Ny Utgift</button>
-                </div>
-                
-            <div class="card" id="form-receipt" style="display: none;">
-                <h3 id="form-receipt-title">Löpande Utgift</h3>
-                <input type="hidden" id="edit-receipt-id">
-                
-                <div style="margin: 16px 0; position: relative;" class="image-preview" id="receipt-preview-container">
-                    <i class="ph ph-camera"></i>
-                    <p>Fota kvittot</p>
-                    <img id="receipt-preview" src="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:12px;">
-                    <input type="file" accept="image/*" capture="environment" id="receipt-upload" style="display:none;">
-                </div>
-
-                <input type="text" id="receipt-store" placeholder="Byggvaruhus / Leverantör" class="input-field" style="margin-bottom:16px;">
-                
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px 0;display:flex;justify-content:space-between;align-items:center;">
-                    <span>Specifikation (Rader)</span>
-                </div>
-                
-                <div id="receipt-lines-container">
-                    <!-- Fylls dynamiskt från JS -->
-                </div>
-                
-                <button id="btn-add-receipt-line" class="btn-secondary w-full" style="margin-top:12px;font-size:13px;padding:8px;border:2px dashed var(--primary-color);color:var(--primary-color);font-weight:600;background:transparent;">
-                    + Lägg till Kvitto-rad
-                </button>
-
-                <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:14px;font-weight:600;color:var(--text-muted);">Summa Kvitto:</span>
-                    <strong style="font-size:20px;color:var(--primary-color);" id="receipt-total-display">0 <span class="currency-symbol"></span></strong>
-                </div>
-
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button class="btn-primary w-full" id="btn-save-receipt">Spara Utgift</button>
-                    <button class="btn-secondary w-full" id="btn-cancel-receipt" style="background:#E2E8F0;color:#0F172A;border:none;font-weight:600;display:none;">Avbryt</button>
-                </div>
-            </div>
-
-            <div id="receipt-list">
-                <!-- Dynamiskt innehåll -->
-            </div>
-            
-        </div> <!-- End Tab 2 -->
-
-    </section>
-
         <!-- View: Mått/Rum -->
         <section id="view-measurements" class="view">
             <div class="section-header">
-                <h2>Projekt & Mått</h2>
+                <h2 data-i18n="title_measurements">Projekt & Mått</h2>
                 <button class="btn-icon" id="btn-add-room"><i class="ph ph-plus"></i></button>
             </div>
             
             <div class="card" id="form-room" style="display: none;">
-                <h3 id="form-room-title">Definiera Rum</h3>
+                <h3 id="form-room-title" data-i18n="title_define_room">Definiera Rum</h3>
                 <input type="hidden" id="edit-room-id">
                 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;">Plats</div>
+                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_floor_level">Plats</div>
                 <select id="room-floor" class="input-field">
-                    <option value="" disabled selected>Välj våning...</option>
-                    <option value="Källare">Källare</option>
-                    <option value="Våning 1">Våning 1</option>
-                    <option value="Våning 2">Våning 2</option>
-                    <option value="Våning 3">Våning 3</option>
-                    <option value="Utsida">Utsida</option>
+                    <option value="" disabled selected data-i18n="opt_floor_sel">Välj våning...</option>
+                    <option value="Källare" data-i18n="opt_floor_cellar">Källare</option>
+                    <option value="Våning 1" data-i18n="opt_floor_1">Våning 1</option>
+                    <option value="Våning 2" data-i18n="opt_floor_2">Våning 2</option>
+                    <option value="Våning 3" data-i18n="opt_floor_3">Våning 3</option>
+                    <option value="Utsida" data-i18n="opt_floor_outside">Utsida</option>
                 </select>
                 <select id="room-type" class="input-field">
-                    <option value="" disabled selected>Välj rum...</option>
-                    <option value="Vardagsrum">Vardagsrum</option>
-                    <option value="Kök">Kök</option>
-                    <option value="Sovrum 1">Sovrum 1</option>
-                    <option value="Sovrum 2">Sovrum 2</option>
-                    <option value="Sovrum 3">Sovrum 3</option>
-                    <option value="Sovrum 4">Sovrum 4</option>
-                    <option value="Matsal">Matsal</option>
-                    <option value="Badrum">Badrum</option>
-                    <option value="Toalett">Toalett</option>
-                    <option value="Hall">Hall</option>
-                    <option value="Entré">Entré</option>
-                    <option value="Korridor 1">Korridor 1</option>
-                    <option value="Korridor 2">Korridor 2</option>
-                    <option value="Korridor 3">Korridor 3</option>
-                    <option value="Grovkök">Grovkök</option>
-                    <option value="Tvättstuga">Tvättstuga</option>
-                    <option value="Walk-in closet">Walk-in closet</option>
-                    <option value="Allrum">Allrum</option>
-                    <option value="Kontor">Kontor</option>
-                    <option value="Gästrum">Gästrum</option>
-                    <option value="Tekniska rum">Tekniska rum</option>
-                    <option value="Bastu">Bastu</option>
-                    <option value="Skrubb 1">Skrubb 1</option>
-                    <option value="Skrubb 2">Skrubb 2</option>
-                    <option value="Skrubb 3">Skrubb 3</option>
-                    <option value="Fasad">Fasad</option>
-                    <option value="Trädgård">Trädgård</option>
-                    <option value="Terass">Terass</option>
-                    <option value="Garage">Garage</option>
+                    <option value="" disabled selected data-i18n="opt_room_sel">Välj rum...</option>
+                    <option value="Vardagsrum" data-i18n="opt_room_living">Vardagsrum</option>
+                    <option value="Kök" data-i18n="opt_room_kitchen">Kök</option>
+                    <option value="Sovrum 1" data-i18n="opt_room_bed1">Sovrum 1</option>
+                    <option value="Sovrum 2" data-i18n="opt_room_bed2">Sovrum 2</option>
+                    <option value="Sovrum 3" data-i18n="opt_room_bed3">Sovrum 3</option>
+                    <option value="Sovrum 4" data-i18n="opt_room_bed4">Sovrum 4</option>
+                    <option value="Matsal" data-i18n="opt_room_dining">Matsal</option>
+                    <option value="Badrum" data-i18n="opt_room_bath">Badrum</option>
+                    <option value="Toalett" data-i18n="opt_room_wc">Toalett</option>
+                    <option value="Hall" data-i18n="opt_room_hall">Hall</option>
+                    <option value="Entré" data-i18n="opt_room_entry">Entré</option>
+                    <option value="Korridor 1" data-i18n="opt_room_corr1">Korridor 1</option>
+                    <option value="Korridor 2" data-i18n="opt_room_corr2">Korridor 2</option>
+                    <option value="Korridor 3" data-i18n="opt_room_corr3">Korridor 3</option>
+                    <option value="Grovkök" data-i18n="opt_room_utility">Grovkök</option>
+                    <option value="Tvättstuga" data-i18n="opt_room_laundry">Tvättstuga</option>
+                    <option value="Walk-in closet" data-i18n="opt_room_closet">Walk-in closet</option>
+                    <option value="Allrum" data-i18n="opt_room_family">Allrum</option>
+                    <option value="Kontor" data-i18n="opt_room_office">Kontor</option>
+                    <option value="Gästrum" data-i18n="opt_room_guest">Gästrum</option>
+                    <option value="Tekniska rum" data-i18n="opt_room_tech">Tekniska rum</option>
+                    <option value="Bastu" data-i18n="opt_room_sauna">Bastu</option>
+                    <option value="Skrubb 1" data-i18n="opt_room_storage1">Skrubb 1</option>
+                    <option value="Skrubb 2" data-i18n="opt_room_storage2">Skrubb 2</option>
+                    <option value="Skrubb 3" data-i18n="opt_room_storage3">Skrubb 3</option>
+                    <option value="Fasad" data-i18n="opt_room_facade">Fasad</option>
+                    <option value="Trädgård" data-i18n="opt_room_garden">Trädgård</option>
+                    <option value="Terass" data-i18n="opt_room_terrace">Terass</option>
+                    <option value="Garage" data-i18n="opt_room_garage">Garage</option>
                 </select>
 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;">Golv</div>
+                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_floor">Golv</div>
                 <div style="display:flex; gap:10px;">
-                    <input type="number" id="room-floor-length" placeholder="Längd (m)" class="input-field" step="0.1">
-                    <input type="number" id="room-floor-width" placeholder="Bredd (m)" class="input-field" step="0.1">
+                    <input type="number" id="room-floor-length" placeholder="Längd (m)" data-i18n-placeholder="ph_length" class="input-field" step="0.1">
+                    <input type="number" id="room-floor-width" placeholder="Bredd (m)" data-i18n-placeholder="ph_width" class="input-field" step="0.1">
                 </div>
-                <input type="number" id="room-floor-adj" placeholder="Justering t.ex. nisch +/- (m²)" class="input-field" step="0.1">
+                <input type="number" id="room-floor-adj" placeholder="Justering t.ex. nisch +/- (m²)" data-i18n-placeholder="ph_floor_adj" class="input-field" step="0.1">
 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;">Väggar</div>
+                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_walls">Väggar</div>
                 <div style="display:flex; gap:10px;">
-                    <input type="number" id="room-wall-short" placeholder="Höjd Kortsida (m)" class="input-field" step="0.1">
-                    <input type="number" id="room-wall-long" placeholder="Höjd Långsida (m)" class="input-field" step="0.1">
+                    <input type="number" id="room-wall-short" placeholder="Höjd Kortsida (m)" data-i18n-placeholder="ph_wall_short" class="input-field" step="0.1">
+                    <input type="number" id="room-wall-long" placeholder="Höjd Långsida (m)" data-i18n-placeholder="ph_wall_long" class="input-field" step="0.1">
                 </div>
-                <input type="number" id="room-wall-adj" placeholder="Justering fönster/dörr +/- (m²)" class="input-field" step="0.1">
+                <input type="number" id="room-wall-adj" placeholder="Justering fönster/dörr +/- (m²)" data-i18n-placeholder="ph_wall_adj" class="input-field" step="0.1">
 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;">Tak</div>
-                <input type="number" id="room-ceiling-adj" placeholder="Justering tak +/- (m²)" class="input-field" step="0.1">
+                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_ceiling">Tak</div>
+                <input type="number" id="room-ceiling-adj" placeholder="Justering tak +/- (m²)" data-i18n-placeholder="ph_ceil_adj" class="input-field" step="0.1">
 
                 <div style="display:flex;gap:10px;">
-                    <button class="btn-primary w-full" id="btn-save-room" style="margin-top:16px;">Spara Rum</button>
-                    <button class="btn-secondary w-full" id="btn-delete-room" style="margin-top:16px;background:#FEE2E2;color:#DC2626;border:none;border-radius:var(--radius-md);font-weight:600;display:none;">Ta bort</button>
+                    <button class="btn-primary w-full" id="btn-save-room" style="margin-top:16px;" data-i18n="btn_save">Spara Rum</button>
+                    <button class="btn-secondary w-full" id="btn-delete-room" style="margin-top:16px;background:#FEE2E2;color:#DC2626;border:none;border-radius:var(--radius-md);font-weight:600;display:none;" data-i18n="btn_delete">Ta bort</button>
                 </div>
             </div>
 
@@ -392,26 +410,38 @@
     <nav class="bottom-nav" id="main-nav" style="display:none;">
         <button class="nav-btn" data-target="view-dashboard" data-title="Översikt">
             <i class="ph ph-squares-four"></i>
-            <span>Översikt</span>
+            <span data-i18n="nav_dashboard">Översikt</span>
         </button>
         <button class="nav-btn" data-target="view-measurements" data-title="Mått & Rum">
             <i class="ph ph-ruler"></i>
-            <span>Mått</span>
+            <span data-i18n="nav_measurements">Mått</span>
         </button>
         <button class="nav-btn" data-target="view-budget" data-title="Budgetkalkyl">
             <i class="ph ph-money"></i>
-            <span>Budget</span>
+            <span data-i18n="nav_budget">Budget</span>
         </button>
         <button class="nav-btn" data-target="view-finance" data-title="Ekonomi & Utgifter">
             <i class="ph ph-receipt"></i>
-            <span>Ekonomi</span>
+            <span data-i18n="nav_finance">Ekonomi</span>
         </button>
         <button class="nav-btn" data-target="view-timeline" data-title="Tidplan">
             <i class="ph ph-calendar-blank"></i>
-            <span>Tidplan</span>
+            <span data-i18n="nav_timeline">Tidplan</span>
         </button>
     </nav>
 
-    <script src="js/app.js?v=2"></script>
+    <!-- Fullscreen Image Modal -->
+    <div id="image-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.95); z-index:9999; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
+        <div style="width:100%;text-align:right;margin-bottom:16px;">
+            <button onclick="document.getElementById('image-modal').style.display='none'" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:44px; height:44px; border-radius:50%; font-size:24px; cursor:pointer;"><i class="ph ph-x"></i></button>
+        </div>
+        <img id="image-modal-img" src="" style="max-width:100%; max-height:80vh; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.5); object-fit:contain;">
+    </div>
+
+    <script src="js/i18n.js?v=1"></script>
+    <script src="js/app.js?v=3"></script>
+    <script>
+        document.getElementById('lang-select').value = window.currentLang;
+    </script>
 </body>
 </html>
