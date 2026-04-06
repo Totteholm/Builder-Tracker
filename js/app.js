@@ -777,23 +777,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if(!floorBreakdowns[rm.floor]) floorBreakdowns[rm.floor] = { Golv:0, Väggar:0, Tak:0, Rör:0, Ventilation:0, El:0, Fastinredning:0, Byggmaterial:0, 'Färg/Spackel':0, 'Lister/Foder':0, 'Fönster/Dörrar':0, Arbetskostnader:0, Buffert:0 };
             let fb = floorBreakdowns[rm.floor];
 
-            const sumFloor = b.floorPrice * rm.areas.floor;
-            const sumWall = b.wallPrice * rm.areas.wall;
-            const sumCeil = b.ceilPrice * rm.areas.ceiling;
+            const sumFloor = (b.floor || b.floorPrice || 0) * rm.areas.floor;
+            const sumWall = (b.wall || b.wallPrice || 0) * rm.areas.wall;
+            const sumCeil = (b.ceil || b.ceilPrice || 0) * rm.areas.ceiling;
             
             grandBreakdown.Golv += sumFloor; fb.Golv += sumFloor;
             grandBreakdown.Väggar += sumWall; fb.Väggar += sumWall;
             grandBreakdown.Tak += sumCeil; fb.Tak += sumCeil;
-            grandBreakdown.Rör += b.pipes; fb.Rör += b.pipes;
-            grandBreakdown.Ventilation += b.vent; fb.Ventilation += b.vent;
-            grandBreakdown.El += b.elec; fb.El += b.elec;
-            grandBreakdown.Fastinredning += b.fit; fb.Fastinredning += b.fit;
-            grandBreakdown.Byggmaterial += b.mat; fb.Byggmaterial += b.mat;
-            grandBreakdown['Färg/Spackel'] += b.paint; fb['Färg/Spackel'] += b.paint;
-            grandBreakdown['Lister/Foder'] += b.trim; fb['Lister/Foder'] += b.trim;
-            grandBreakdown['Fönster/Dörrar'] += b.door; fb['Fönster/Dörrar'] += b.door;
-            grandBreakdown.Arbetskostnader += b.ext; fb.Arbetskostnader += b.ext;
-            grandBreakdown.Buffert += b.unexp; fb.Buffert += b.unexp;
+            grandBreakdown.Rör += (b.pipes || 0); fb.Rör += (b.pipes || 0);
+            grandBreakdown.Ventilation += (b.vent || 0); fb.Ventilation += (b.vent || 0);
+            grandBreakdown.El += (b.elec || 0); fb.El += (b.elec || 0);
+            grandBreakdown.Fastinredning += (b.fit || 0); fb.Fastinredning += (b.fit || 0);
+            grandBreakdown.Byggmaterial += (b.mat || 0); fb.Byggmaterial += (b.mat || 0);
+            grandBreakdown['Färg/Spackel'] += (b.paint || 0); fb['Färg/Spackel'] += (b.paint || 0);
+            grandBreakdown['Lister/Foder'] += (b.trim || 0); fb['Lister/Foder'] += (b.trim || 0);
+            grandBreakdown['Fönster/Dörrar'] += (b.door || 0); fb['Fönster/Dörrar'] += (b.door || 0);
+            grandBreakdown.Arbetskostnader += (b.ext || 0); fb.Arbetskostnader += (b.ext || 0);
+            grandBreakdown.Buffert += (b.unexp || 0); fb.Buffert += (b.unexp || 0);
         });
 
         const genBreakdownHTML = (bdObj) => {
