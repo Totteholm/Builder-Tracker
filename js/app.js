@@ -345,13 +345,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
         sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
 
-        let cOpts = '<option value="" disabled selected>Välj Kategori...</option>';
-        categories.forEach(c => cOpts += `<option value="${c}">${c}</option>`);
+        let cOpts = `<option value="" disabled selected>${window.t('opt_cat_sel')}</option>`;
+        categories.forEach(c => {
+            const catKey = c === 'Rör/Vent' ? 'cat_rör' : ('cat_' + c);
+            cOpts += `<option value="${c}">${window.t(catKey)}</option>`;
+        });
 
         const html = `
             <div id="${id}" style="background:#F8FAFC;padding:12px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;position:relative;">
                 <button type="button" onclick="document.getElementById('${id}').remove(); calcReceiptTotal();" style="position:absolute;top:10px;right:10px;color:var(--danger-color);background:none;border:none;cursor:pointer;"><i class="ph ph-trash" style="font-size:18px;"></i></button>
-                <input type="number" class="input-field receipt-line-calc" placeholder="Belopp" style="margin-bottom:8px;font-weight:bold;width:80%;" oninput="calcReceiptTotal()">
+                <input type="number" class="input-field receipt-line-calc" placeholder="${window.t('placeholder_amount')}" style="margin-bottom:8px;font-weight:bold;width:80%;" oninput="calcReceiptTotal()">
                 <div style="display:flex;gap:8px;">
                     <select class="input-field receipt-line-room" style="flex:1;">${rOpts}</select>
                     <select class="input-field receipt-line-cat" style="flex:1;">${cOpts}</select>
@@ -364,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnAddReceipt.addEventListener('click', () => {
         if(formReceipt.style.display === 'none') {
             document.getElementById('edit-receipt-id').value = '';
-            document.getElementById('form-receipt-title').innerText = "Ny Utgift";
+            document.getElementById('form-receipt-title').innerText = window.t('btn_add_receipt');
             document.getElementById('btn-cancel-receipt').style.display = 'none';
             receiptLinesContainer.innerHTML = '';
             receiptStore.value = '';
@@ -455,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!exp) return;
 
         document.getElementById('edit-receipt-id').value = exp.id;
-        document.getElementById('form-receipt-title').innerText = "Redigera Utgift";
+        document.getElementById('form-receipt-title').innerText = window.t('title_edit_receipt');
         document.getElementById('btn-cancel-receipt').style.display = 'block';
 
         receiptStore.value = exp.store;
@@ -478,13 +481,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
                 sortedRooms.forEach(r => rOpts += `<option value="${r.name}" ${it.room === r.name ? 'selected' : ''}>${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
 
-                let cOpts = `<option value="" disabled>Välj Kategori...</option>`;
-                categories.forEach(c => cOpts += `<option value="${c}" ${it.cat === c ? 'selected' : ''}>${window.t('cat_' + c)}</option>`);
+                let cOpts = `<option value="" disabled>${window.t('opt_cat_sel')}</option>`;
+                categories.forEach(c => {
+                    const catKey = c === 'Rör/Vent' ? 'cat_rör' : ('cat_' + c);
+                    cOpts += `<option value="${c}" ${it.cat === c ? 'selected' : ''}>${window.t(catKey)}</option>`;
+                });
 
                 const html = `
                     <div id="${id}" style="background:#F8FAFC;padding:12px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:8px;position:relative;">
                         <button type="button" onclick="document.getElementById('${id}').remove(); calcReceiptTotal();" style="position:absolute;top:10px;right:10px;color:var(--danger-color);background:none;border:none;cursor:pointer;"><i class="ph ph-trash" style="font-size:18px;"></i></button>
-                        <input type="number" class="input-field receipt-line-calc" placeholder="Belopp" style="margin-bottom:8px;font-weight:bold;width:80%;" value="${it.amount}" oninput="calcReceiptTotal()">
+                        <input type="number" class="input-field receipt-line-calc" placeholder="${window.t('placeholder_amount')}" style="margin-bottom:8px;font-weight:bold;width:80%;" value="${it.amount}" oninput="calcReceiptTotal()">
                         <div style="display:flex;gap:8px;">
                             <select class="input-field receipt-line-room" style="flex:1;">${rOpts}</select>
                             <select class="input-field receipt-line-cat" style="flex:1;">${cOpts}</select>
@@ -861,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 budgetSummaryBox.innerHTML = `
-                    <h3 style="font-size:13px;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;">Kalkyl: Totalkostnad</h3>
+                    <h3 style="font-size:13px;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;">${window.t('title_calc_total')}</h3>
                     <div style="margin-bottom:8px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleSummaryDetails(this)">
                             <div style="font-size:24px;font-weight:700;color:var(--primary-color);">
@@ -997,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:8px 0;">
                         <div style="flex:1;">
                             <div style="font-size:13px; font-weight:600; color:var(--text-primary);">${window.t('cat_' + c)}</div>
-                            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Budget: ${b.toLocaleString('sv-SE')} | Utfall: ${s.toLocaleString('sv-SE')}</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${window.t('lbl_budget_short')}: ${b.toLocaleString('sv-SE')} | ${window.t('lbl_outcome')}: ${s.toLocaleString('sv-SE')}</div>
                         </div>
                         <div style="font-weight:700; font-size:15px; color:${color}; text-align:right;">
                             ${sign}${diff.toLocaleString('sv-SE')} ${currentCurrency}
@@ -1005,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             });
-            if(!varHtml) varHtml = '<p style="font-size:12px;color:var(--text-muted);">Skapa rumsbudget eller lägg in utgifter för att se kalkyljämförelsen.</p>';
+            if(!varHtml) varHtml = `<p style="font-size:12px;color:var(--text-muted);">${window.t('empty_variance')}</p>`;
             varDiv.innerHTML = varHtml;
         }
 

@@ -46,6 +46,7 @@ const translations = {
         btn_add_room: "Lägg till Rum",
         lbl_floor_level: "Plats",
         lbl_floor: "Golv",
+        lbl_wall: "Vägg",
         lbl_walls: "Väggar",
         lbl_ceiling: "Tak",
         
@@ -57,7 +58,7 @@ const translations = {
         desc_variance: "Grönt betyder återstående pott, Rött betyder överskriden budget.",
         title_receipts: "Kvitton / Utgifter",
         desc_receipts: "Spara dina löpande kvitton och utgifter här.",
-        btn_add_receipt: "Ny Utgift",
+        btn_add_receipt: "+ Ny Utgift",
         btn_save_receipt: "Spara Utgift",
         receipt_form_title: "Löpande Utgift",
         lbl_photo_receipt: "Fota kvittot",
@@ -65,6 +66,12 @@ const translations = {
         btn_add_line: "+ Lägg till Kvitto-rad",
         lbl_total_receipt: "Summa Kvitto:",
         receipt_no_data: "Inga utgifter sparade än.",
+
+        // Ny budget
+        title_calc_total: "Kalkyl: Totalkostnad",
+        lbl_budget_short: "Budget",
+        lbl_outcome: "Utfall",
+        empty_variance: "Skapa rumsbudget eller lägg in utgifter för att se kalkyljämförelsen.",
         
         // Timeline
         tab_calendar_data: "Kalender-data",
@@ -72,6 +79,7 @@ const translations = {
         btn_add_phase: "Lägg till skede",
         title_schedule_phase: "Schemalägg Skede",
         title_edit_phase: "Redigera Skede",
+        title_edit_receipt: "Redigera Utgift",
         lbl_connect_room: "1. Koppla till Rum",
         lbl_select_cat: "2. Välj Kategori",
         lbl_period: "3. Tidsperiod (Dagar)",
@@ -159,6 +167,10 @@ const translations = {
         cat_bygg: "Bygg",
 
         // Placeholders
+        placeholder_room_l: "Längd (m)",
+        placeholder_room_w: "Bredd (m)",
+        placeholder_room_h: "Höjd (m)",
+        placeholder_amount: "Belopp",
         ph_length: "Längd (m)",
         ph_width: "Bredd (m)",
         ph_floor_adj: "Justering t.ex. nisch +/- (m²)",
@@ -219,6 +231,7 @@ const translations = {
         btn_add_room: "Add Room",
         lbl_floor_level: "Location",
         lbl_floor: "Floor",
+        lbl_wall: "Wall",
         lbl_walls: "Walls",
         lbl_ceiling: "Ceiling",
         title_finance: "Finance & Expenses",
@@ -228,7 +241,7 @@ const translations = {
         desc_variance: "Green means remaining pot, Red means exceeded budget.",
         title_receipts: "Receipts / Expenses",
         desc_receipts: "Save your running expenses here.",
-        btn_add_receipt: "New Expense",
+        btn_add_receipt: "+ Add Expense",
         btn_save_receipt: "Save Expense",
         receipt_form_title: "Running Expense",
         lbl_photo_receipt: "Scan Receipt",
@@ -236,11 +249,19 @@ const translations = {
         btn_add_line: "+ Add Line",
         lbl_total_receipt: "Total:",
         receipt_no_data: "No expenses saved yet.",
+
+        // Ny budget
+        title_calc_total: "Estimate: Total Cost",
+        lbl_budget_short: "Budget",
+        lbl_outcome: "Outcome",
+        empty_variance: "Create room budget or add expenses to see variance comparison.",
+
         tab_calendar_data: "Calendar Data",
         tab_calendar_project: "Project Calendar",
         btn_add_phase: "Add Phase",
         title_schedule_phase: "Schedule Phase",
         title_edit_phase: "Edit Phase",
+        title_edit_receipt: "Edit Expense",
         lbl_connect_room: "1. Connect Room",
         lbl_select_cat: "2. Category",
         lbl_period: "3. Time Period",
@@ -326,6 +347,10 @@ const translations = {
         cat_bygg: "Construction",
 
         // Placeholders
+        placeholder_room_l: "Length (m)",
+        placeholder_room_w: "Width (m)",
+        placeholder_room_h: "Height (m)",
+        placeholder_amount: "Amount",
         ph_length: "Length (m)",
         ph_width: "Width (m)",
         ph_floor_adj: "Adjust e.g. niche +/- (m²)",
@@ -385,6 +410,7 @@ const translations = {
         btn_add_room: "Lisää huone",
         lbl_floor_level: "Sijainti",
         lbl_floor: "Lattia",
+        lbl_wall: "Seinä",
         lbl_walls: "Seinät",
         lbl_ceiling: "Katto",
         title_finance: "Talous & Kulut",
@@ -394,7 +420,7 @@ const translations = {
         desc_variance: "Vihreä tarkoittaa jäljellä olevaa budjettia, punainen ylitettyä.",
         title_receipts: "Kuitit / Kulut",
         desc_receipts: "Tallenna juoksevat kulut tänne.",
-        btn_add_receipt: "Uusi kulu",
+        btn_add_receipt: "+ Uusi kulu",
         btn_save_receipt: "Tallenna kulu",
         receipt_form_title: "Juokseva kulu",
         lbl_photo_receipt: "Kuvaa kuitti",
@@ -402,11 +428,19 @@ const translations = {
         btn_add_line: "+ Lisää rivi",
         lbl_total_receipt: "Yhteensä:",
         receipt_no_data: "Ei kuluja vielä.",
+
+        // Ny budget
+        title_calc_total: "Arvio: Kokonaiskustannukset",
+        lbl_budget_short: "Budjetti",
+        lbl_outcome: "Toteutuma",
+        empty_variance: "Luo huonebudjetti tai lisää kuluja nähdäksesi vertailun.",
+
         tab_calendar_data: "Kalenteritiedot",
         tab_calendar_project: "Projektikalenteri",
         btn_add_phase: "Lisää vaihe",
         title_schedule_phase: "Aikatauluta vaihe",
         title_edit_phase: "Muokkaa vaihetta",
+        title_edit_receipt: "Muokkaa kulua",
         lbl_connect_room: "1. Yhdistä huone",
         lbl_select_cat: "2. Valitse kategoria",
         lbl_period: "3. Ajanjakso (Päivää)",
@@ -492,6 +526,10 @@ const translations = {
         cat_bygg: "Rakennus",
 
         // Placeholders
+        placeholder_room_l: "Pituus (m)",
+        placeholder_room_w: "Leveys (m)",
+        placeholder_room_h: "Korkeus (m)",
+        placeholder_amount: "Summa",
         ph_length: "Pituus (m)",
         ph_width: "Leveys (m)",
         ph_floor_adj: "Säätö esim. syvennys +/- (m²)",
