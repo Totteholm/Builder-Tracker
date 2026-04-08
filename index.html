@@ -117,32 +117,13 @@
                 <h3 id="budget-room-title" data-i18n="title_manage_budget">Hantera Budget</h3>
                 <input type="hidden" id="b-room-id">
                 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_surfaces">Ytskikt (Pris/M²)</div>
-                <div style="display:flex;gap:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_floor">Golvpris</label><input type="number" id="b-floor-price" class="input-field" step="1"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_wall">Väggpris</label><input type="number" id="b-wall-price" class="input-field" step="1"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_ceiling">Takpris</label><input type="number" id="b-ceil-price" class="input-field" step="1"></div>
+                <div id="budget-items-container" style="margin-top:16px;">
+                    <!-- Dynamically filled with budget-line-row elements -->
                 </div>
 
-                <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;" data-i18n="lbl_fixed_estimates">Fasta Uppskattningar (Totalsummor)</div>
-                <div style="display:flex;gap:10px;margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_pipes">Rör</label><input type="number" id="b-pipes" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_vent">Ventilation</label><input type="number" id="b-vent" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_elec">El</label><input type="number" id="b-elec" class="input-field"></div>
-                </div>
-                <div style="display:flex;gap:10px;margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_fit">Fastinredning</label><input type="number" id="b-fit" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_mat">Byggmaterial</label><input type="number" id="b-mat" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_paint">Färg etc</label><input type="number" id="b-paint" class="input-field"></div>
-                </div>
-                <div style="display:flex;gap:10px;margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_trim">Lister/Foder</label><input type="number" id="b-trim" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_door">Fönster/Dörr</label><input type="number" id="b-door" class="input-field"></div>
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);" data-i18n="lbl_ext">Arbetskostnader</label><input type="number" id="b-ext" class="input-field"></div>
-                </div>
-                <div style="display:flex;gap:10px;">
-                    <div style="flex:1;"><label style="font-size:10px;color:var(--text-muted);font-weight:600;" data-i18n="lbl_unexp">Oförutsedda utg. / Buffert</label><input type="number" id="b-unexp" class="input-field"></div>
-                </div>
+                <button id="btn-add-budget-item" class="btn-add-row" data-i18n="btn_add_budget_item">
+                    <i class="ph ph-plus-circle"></i> Lägg till budgetpost
+                </button>
 
                 <div style="display:flex;gap:10px;">
                     <button class="btn-primary w-full" id="btn-save-room-budget" style="margin-top:16px;" data-i18n="btn_save_budget">Spara Rumsbudget</button>
@@ -209,8 +190,8 @@
                     <!-- Fylls dynamiskt från JS -->
                 </div>
                 
-                <button id="btn-add-receipt-line" class="btn-secondary w-full" style="margin-top:12px;font-size:13px;padding:8px;border:2px dashed var(--primary-color);color:var(--primary-color);font-weight:600;background:transparent;" data-i18n="btn_add_line">
-                    + Lägg till Kvitto-rad
+                <button id="btn-add-receipt-line" class="btn-add-row" data-i18n="btn_add_line">
+                    <i class="ph ph-plus-circle"></i> Lägg till Kvitto-rad
                 </button>
 
                 <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
@@ -252,31 +233,10 @@
                         <!-- Fylls från JS -->
                     </select>
                     
-                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;" data-i18n="lbl_select_cat">2. Välj Kategori</div>
-                    <select id="task-cat" class="input-field" style="margin-bottom:16px;">
-                        <option value="" disabled selected data-i18n="opt_cat_sel">Välj...</option>
-                        <option value="Rivning" data-i18n="cat_rivning">Rivning</option>
-                        <option value="Bygg" data-i18n="cat_bygg">Bygg</option>
-                        <option value="Golv" data-i18n="cat_golv">Golv</option>
-                        <option value="Väggar" data-i18n="cat_väggar">Väggar</option>
-                        <option value="Tak" data-i18n="cat_tak">Tak</option>
-                        <option value="Rör/Vent" data-i18n="cat_rör">Rör/Vent</option>
-                        <option value="El" data-i18n="cat_el">El</option>
-                        <option value="Fastinredning" data-i18n="cat_fastinredning">Fastinredning</option>
-                    </select>
-
-                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;" data-i18n="lbl_period">3. Tidsperiod (Dagar)</div>
-                    <div style="display:flex; gap:10px; margin-bottom:16px;">
-                        <div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);" data-i18n="lbl_start">Start</label><input type="date" id="task-start" class="input-field"></div>
-                        <div style="flex:1;"><label style="font-size:11px;color:var(--text-muted);" data-i18n="lbl_end">Slut</label><input type="date" id="task-end" class="input-field"></div>
-                    </div>
-                    
-                    <div class="form-group-title" style="font-weight:600;font-size:12px;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px;" data-i18n="lbl_status">Status</div>
-                    <select id="task-status" class="input-field" style="margin-bottom:16px;">
-                        <option value="pending" data-i18n="stat_pending">Ej påbörjad</option>
-                        <option value="ongoing" data-i18n="stat_ongoing">Pågår</option>
-                        <option value="done" data-i18n="stat_done">Klar</option>
-                    </select>
+                    <div id="task-lines-container"></div>
+                    <button id="btn-add-task-line" class="btn-add-row" data-i18n="btn_add_phase_line">
+                        <i class="ph ph-plus-circle"></i> + Ytterligare skede
+                    </button>
 
                     <div style="display:flex; gap:10px;">
                         <button class="btn-primary w-full" id="btn-save-task" data-i18n="btn_save">Spara Skede</button>
@@ -288,14 +248,6 @@
                     <div style="font-size:14px;font-weight:600;color:var(--text-muted);" data-i18n="lbl_tasks">Inlagda Skeden</div>
                     <select id="task-filter-cat" class="input-field" style="width:140px;padding:4px 8px;font-size:12px;margin:0;">
                         <option value="ALLA" data-i18n="cat_alla">Visa Alla</option>
-                        <option value="Rivning" data-i18n="cat_rivning">Rivning</option>
-                        <option value="Bygg" data-i18n="cat_bygg">Bygg</option>
-                        <option value="Golv" data-i18n="cat_golv">Golv</option>
-                        <option value="Väggar" data-i18n="cat_väggar">Väggar</option>
-                        <option value="Tak" data-i18n="cat_tak">Tak</option>
-                        <option value="Rör/Vent" data-i18n="cat_rör">Rör/Vent</option>
-                        <option value="El" data-i18n="cat_el">El</option>
-                        <option value="Fastinredning" data-i18n="cat_fastinredning">Fastinredning</option>
                     </select>
                 </div>
                 

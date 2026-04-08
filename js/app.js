@@ -71,22 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Budget Form
     const formBudget = document.getElementById('form-room-budget');
     const budgetRoomTitle = document.getElementById('budget-room-title');
-    const budgetInputs = {
-        roomId: document.getElementById('b-room-id'),
-        floor: document.getElementById('b-floor-price'),
-        wall: document.getElementById('b-wall-price'),
-        ceil: document.getElementById('b-ceil-price'),
-        pipes: document.getElementById('b-pipes'),
-        vent: document.getElementById('b-vent'),
-        elec: document.getElementById('b-elec'),
-        fit: document.getElementById('b-fit'),
-        mat: document.getElementById('b-mat'),
-        paint: document.getElementById('b-paint'),
-        trim: document.getElementById('b-trim'),
-        door: document.getElementById('b-door'),
-        ext: document.getElementById('b-ext'),
-        unexp: document.getElementById('b-unexp')
-    };
+    const budgetItemsContainer = document.getElementById('budget-items-container');
+    const btnAddBudgetItem = document.getElementById('btn-add-budget-item');
+    const budgetRoomIdHidden = document.getElementById('b-room-id');
     const btnSaveRoomBudget = document.getElementById('btn-save-room-budget');
     const btnCancelRoomBudget = document.getElementById('btn-cancel-room-budget');
     const budgetList = document.getElementById('budget-list');
@@ -121,10 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelTask = document.getElementById('btn-cancel-task');
     const btnSaveTask = document.getElementById('btn-save-task');
     const taskRoom = document.getElementById('task-room');
-    const taskCat = document.getElementById('task-cat');
-    const taskStart = document.getElementById('task-start');
-    const taskEnd = document.getElementById('task-end');
-    const taskStatus = document.getElementById('task-status');
+    const taskLinesContainer = document.getElementById('task-lines-container');
+    const btnAddTaskLine = document.getElementById('btn-add-task-line');
     const taskFilterCat = document.getElementById('task-filter-cat');
     const taskListFull = document.getElementById('task-list-full');
 
@@ -229,6 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = document.getElementById('room-type').value;
         if(!floor || !type) return alert(window.t('alert_req_room'));
 
+        const newName = `${floor} - ${type}`;
+        const exists = rooms.some(r => r.name === newName && r.id !== editRoomId.value);
+        if (exists) return alert(window.t('alert_room_exists'));
+
         const l = parseFloat(document.getElementById('room-floor-length').value) || 0;
         const w = parseFloat(document.getElementById('room-floor-width').value) || 0;
         const fAdj = parseFloat(document.getElementById('room-floor-adj').value) || 0;
@@ -298,34 +287,119 @@ document.addEventListener('DOMContentLoaded', () => {
     // BUDGET LOGIC
     btnCancelRoomBudget.addEventListener('click', () => formBudget.style.display = 'none');
     
+    btnAddBudgetItem.addEventListener('click', () => addBudgetItemRow());
+
+    window.addBudgetItemRow = (data = null) => {
+        const id = 'bitem' + Date.now() + Math.random().toString().substr(2,4);
+        const name = data ? data.name : '';
+        const price = data ? data.price : '';
+        const type = data ? data.type : 'fixed';
+
+        const html = `
+            <div id="${id}" class="budget-line-row">
+                <div class="row-actions">
+                    <button class="btn-row-action" title="Flytta upp" onclick="moveBudgetRow('${id}', -1)"><i class="ph ph-caret-up"></i></button>
+                    <button class="btn-row-action" title="Flytta ner" onclick="moveBudgetRow('${id}', 1)"><i class="ph ph-caret-down"></i></button>
+                    <button class="btn-row-action btn-row-delete" onclick="document.getElementById('${id}').remove()"><i class="ph ph-trash"></i></button>
+                </div>
+                
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:2;">
+                        <label style="font-size:10px;color:var(--text-muted);">${window.t('lbl_budget_item_name')}</label>
+                        <input type="text" class="input-field budget-item-name" style="margin-bottom:0;" value="${name}">
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                     <div style="flex:1;">
+                        <label style="font-size:10px;color:var(--text-muted);">${window.t('lbl_budget_item_price')}</label>
+                        <input type="number" class="input-field budget-item-price" style="margin-bottom:0;" value="${price}">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:10px;color:var(--text-muted);">${window.t('lbl_budget_item_type')}</label>
+                        <select class="input-field budget-item-type" style="margin-bottom:0;">
+                            <option value="fixed" ${type === 'fixed' ? 'selected' : ''}>${window.t('opt_type_fixed')}</option>
+                            <option value="floor_m2" ${type === 'floor_m2' ? 'selected' : ''}>${window.t('opt_type_floor')}</option>
+                            <option value="wall_m2" ${type === 'wall_m2' ? 'selected' : ''}>${window.t('opt_type_wall')}</option>
+                            <option value="ceil_m2" ${type === 'ceil_m2' ? 'selected' : ''}>${window.t('opt_type_ceil')}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
+        budgetItemsContainer.insertAdjacentHTML('beforeend', html);
+    };
+
+    window.moveBudgetRow = (id, direction) => {
+        const row = document.getElementById(id);
+        if (direction === -1 && row.previousElementSibling) {
+            row.parentNode.insertBefore(row, row.previousElementSibling);
+        } else if (direction === 1 && row.nextElementSibling) {
+            row.parentNode.insertBefore(row.nextElementSibling, row);
+        }
+    };
+
     window.openBudgetForm = (roomId) => {
         const rm = rooms.find(r => r.id === roomId);
         if(!rm) return;
         budgetRoomTitle.innerText = window.t('title_budget') + ": " + window.getTrans('room-floor', rm.floor) + " - " + window.getTrans('room-type', rm.type);
-        budgetInputs.roomId.value = roomId;
-        const b = roomBudgets[roomId] || {};
-        Object.keys(budgetInputs).forEach(k => { if(k!=='roomId') budgetInputs[k].value = b[k] || ''; });
+        budgetRoomIdHidden.value = roomId;
+        
+        // Migration logic: handle old object format vs new array format
+        let b = roomBudgets[roomId] || { items: [] };
+        if (typeof b === 'object' && !b.items) {
+            // Old format migration
+            const items = [];
+            if(b.floor) items.push({ name: window.t('lbl_floor'), price: b.floor, type: 'floor_m2' });
+            if(b.wall) items.push({ name: window.t('lbl_wall'), price: b.wall, type: 'wall_m2' });
+            if(b.ceil) items.push({ name: window.t('lbl_ceiling'), price: b.ceil, type: 'ceil_m2' });
+            if(b.pipes) items.push({ name: window.t('lbl_pipes'), price: b.pipes, type: 'fixed' });
+            if(b.vent) items.push({ name: window.t('lbl_vent'), price: b.vent, type: 'fixed' });
+            if(b.elec) items.push({ name: window.t('lbl_elec'), price: b.elec, type: 'fixed' });
+            if(b.fit) items.push({ name: window.t('lbl_fit'), price: b.fit, type: 'fixed' });
+            if(b.mat) items.push({ name: window.t('lbl_mat'), price: b.mat, type: 'fixed' });
+            if(b.paint) items.push({ name: window.t('lbl_paint'), price: b.paint, type: 'fixed' });
+            if(b.trim) items.push({ name: window.t('lbl_trim'), price: b.trim, type: 'fixed' });
+            if(b.door) items.push({ name: window.t('lbl_door'), price: b.door, type: 'fixed' });
+            if(b.ext) items.push({ name: window.t('lbl_ext'), price: b.ext, type: 'fixed' });
+            if(b.unexp) items.push({ name: window.t('lbl_unexp'), price: b.unexp, type: 'fixed' });
+            b = { items: items };
+        }
+
+        budgetItemsContainer.innerHTML = '';
+        b.items.forEach(it => addBudgetItemRow(it));
+        
         formBudget.style.display = 'block';
         window.scrollTo(0, document.getElementById('view-budget').offsetTop);
     };
 
     btnSaveRoomBudget.addEventListener('click', () => {
-        const roomId = budgetInputs.roomId.value;
+        const roomId = budgetRoomIdHidden.value;
         const rm = rooms.find(r => r.id === roomId);
         if(!roomId || !rm) return;
 
-        let obj = {};
-        let sumFixed = 0;
-        Object.keys(budgetInputs).forEach(k => { 
-            if(k!=='roomId') {
-                const v = parseFloat(budgetInputs[k].value) || 0;
-                obj[k] = v;
-                if(!['floor','wall','ceil'].includes(k)) sumFixed += v;
+        const itemRows = document.querySelectorAll('.budget-line-row');
+        const items = [];
+        let totalCalculated = 0;
+
+        itemRows.forEach(row => {
+            const name = row.querySelector('.budget-item-name').value;
+            const price = parseFloat(row.querySelector('.budget-item-price').value) || 0;
+            const type = row.querySelector('.budget-item-type').value;
+
+            items.push({ name, price, type });
+
+            if (type === 'fixed') {
+                totalCalculated += price;
+            } else if (type === 'floor_m2') {
+                totalCalculated += (price * (parseFloat(rm.areas.floor) || 0));
+            } else if (type === 'wall_m2') {
+                totalCalculated += (price * (parseFloat(rm.areas.wall) || 0));
+            } else if (type === 'ceil_m2') {
+                totalCalculated += (price * (parseFloat(rm.areas.ceiling) || 0));
             }
         });
 
-        obj.totalCalculated = (obj.floor * parseFloat(rm.areas.floor)) + (obj.wall * parseFloat(rm.areas.wall)) + (obj.ceil * parseFloat(rm.areas.ceiling)) + sumFixed;
-        roomBudgets[roomId] = obj;
+        roomBudgets[roomId] = { items, totalCalculated };
         formBudget.style.display = 'none';
         saveState();
     });
@@ -340,15 +414,21 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addReceiptLine = () => {
         const id = 'line' + Date.now() + Math.random().toString().substr(2,4);
         let rOpts = `<option value="" disabled selected>${window.t('opt_room_sel')}</option>`;
-        rOpts += `<option value="Övergripande (Hela bygget)">${window.t('opt_all_rooms')}</option>`;
         const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
         const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
         sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
+        rOpts += `<option value="ALLA">${window.t('opt_all_rooms')}</option>`;
+
+        // Build dynamic categories list from default + custom budget names
+        let dynamicCats = new Set(categories);
+        Object.values(roomBudgets).forEach(b => {
+            if(b.items) b.items.forEach(it => dynamicCats.add(it.name));
+        });
 
         let cOpts = `<option value="" disabled selected>${window.t('opt_cat_sel')}</option>`;
-        categories.forEach(c => {
-            const catKey = c === 'Rör/Vent' ? 'cat_rör' : ('cat_' + c);
-            cOpts += `<option value="${c}">${window.t(catKey)}</option>`;
+        Array.from(dynamicCats).sort().forEach(c => {
+            const displayName = window.t('cat_' + c.toLowerCase()) !== ('cat_' + c.toLowerCase()) ? window.t('cat_' + c.toLowerCase()) : c;
+            cOpts += `<option value="${c}">${displayName}</option>`;
         });
 
         const html = `
@@ -481,10 +561,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
                 sortedRooms.forEach(r => rOpts += `<option value="${r.name}" ${it.room === r.name ? 'selected' : ''}>${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
 
+                // Build dynamic categories list for this edit line
+                let dynamicCats = new Set(categories);
+                Object.values(roomBudgets).forEach(b => {
+                    if(b.items) b.items.forEach(it => dynamicCats.add(it.name));
+                });
+
                 let cOpts = `<option value="" disabled>${window.t('opt_cat_sel')}</option>`;
-                categories.forEach(c => {
-                    const catKey = c === 'Rör/Vent' ? 'cat_rör' : ('cat_' + c);
-                    cOpts += `<option value="${c}" ${it.cat === c ? 'selected' : ''}>${window.t(catKey)}</option>`;
+                Array.from(dynamicCats).sort().forEach(c => {
+                    const displayName = window.t('cat_' + c.toLowerCase()) !== ('cat_' + c.toLowerCase()) ? window.t('cat_' + c.toLowerCase()) : c;
+                    cOpts += `<option value="${c}" ${it.cat === c ? 'selected' : ''}>${displayName}</option>`;
                 });
 
                 const html = `
@@ -550,50 +636,131 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGantt();
     });
 
-    btnAddTask.addEventListener('click', () => {
-        formTask.style.display = formTask.style.display === 'none' ? 'block' : 'none';
-        document.getElementById('form-task-title').innerText = window.t('title_schedule_phase');
-        
-        // Populate room dropdown seamlessly
-        const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
-        const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
-        let rOpts = `<option value="" disabled selected>${window.t('opt_room_sel')}</option>`;
-        rOpts += `<option value="ALLA">${window.t('opt_all_rooms')}</option>`;
-        sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
-        taskRoom.innerHTML = rOpts;
+    window.addTaskLine = (initData = null) => {
+        const id = 'taskline' + Date.now() + Math.random().toString().substr(2,4);
+        // Build dynamic categories list from default + custom budget names
+        let dynamicCats = new Set(categories);
+        Object.values(roomBudgets).forEach(b => {
+            if(b.items) b.items.forEach(it => dynamicCats.add(it.name));
+        });
 
-        taskRoom.value = '';
-        taskCat.value = '';
-        taskStart.value = '';
-        taskEnd.value = '';
-        taskStatus.value = 'pending';
+        let catOpts = `<option value="" disabled ${!initData ? 'selected' : ''} data-i18n="opt_cat_sel">${window.t('opt_cat_sel')}</option>`;
+        Array.from(dynamicCats).sort().forEach(c => {
+            const displayName = window.t('cat_' + c.toLowerCase()) !== ('cat_' + c.toLowerCase()) ? window.t('cat_' + c.toLowerCase()) : c;
+            const selected = initData && initData.cat === c ? 'selected' : '';
+            catOpts += `<option value="${c}" ${selected}>${displayName}</option>`;
+        });
+
+        const html = `
+            <div id="${id}" class="task-line-segment" style="background:#F8FAFC;padding:12px;border-radius:8px;border:1px solid var(--border-color);margin-bottom:12px;position:relative;">
+                <button type="button" class="remove-task-line" onclick="document.getElementById('${id}').remove()" style="position:absolute;top:10px;right:10px;color:var(--danger-color);background:none;border:none;cursor:pointer; display:${initData && initData.isEdit ? 'none' : 'block'}"><i class="ph ph-trash" style="font-size:18px;"></i></button>
+                
+                <div class="form-group-title" style="font-weight:600;font-size:11px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">${window.t('lbl_select_cat')}</div>
+                <select class="input-field task-line-cat" style="margin-bottom:12px;">${catOpts}</select>
+
+                <div style="display:flex; gap:10px; margin-bottom:12px;">
+                    <div style="flex:1;">
+                        <label style="font-size:11px;color:var(--text-muted);">${window.t('lbl_start')}</label>
+                        <input type="date" class="input-field task-line-start" value="${initData ? initData.start : ''}">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:11px;color:var(--text-muted);">${window.t('lbl_end')}</label>
+                        <input type="date" class="input-field task-line-end" value="${initData ? initData.end : ''}">
+                    </div>
+                </div>
+
+                <div class="form-group-title" style="font-weight:600;font-size:11px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">${window.t('lbl_status')}</div>
+                <select class="input-field task-line-status">
+                    <option value="pending" ${initData && initData.status === 'pending' ? 'selected' : ''}>${window.t('stat_pending')}</option>
+                    <option value="ongoing" ${initData && initData.status === 'ongoing' ? 'selected' : ''}>${window.t('stat_ongoing')}</option>
+                    <option value="done" ${initData && initData.status === 'done' ? 'selected' : ''}>${window.t('stat_done')}</option>
+                </select>
+            </div>
+        `;
+        taskLinesContainer.insertAdjacentHTML('beforeend', html);
+    };
+
+    btnAddTask.addEventListener('click', () => {
+        if(formTask.style.display === 'none') {
+            document.getElementById('edit-task-id').value = '';
+            document.getElementById('form-task-title').innerText = window.t('title_schedule_phase');
+            btnAddTaskLine.style.display = 'block';
+            
+            // Populate room dropdown
+            const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
+            const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
+            let rOpts = `<option value="" disabled selected>${window.t('opt_room_sel')}</option>`;
+            rOpts += `<option value="ALLA">${window.t('opt_all_rooms')}</option>`;
+            sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
+            taskRoom.innerHTML = rOpts;
+            taskRoom.value = '';
+            
+            taskLinesContainer.innerHTML = '';
+            addTaskLine(); // Initial line
+            formTask.style.display = 'block';
+        } else {
+            formTask.style.display = 'none';
+        }
     });
+
+    btnAddTaskLine.addEventListener('click', () => addTaskLine());
 
     btnCancelTask.addEventListener('click', () => formTask.style.display = 'none');
 
     btnSaveTask.addEventListener('click', () => {
-        if(!taskRoom.value || !taskCat.value || !taskStart.value || !taskEnd.value) return alert(window.t('alert_req_fields'));
-        if(new Date(taskStart.value) > new Date(taskEnd.value)) return alert(window.t('alert_date_order'));
+        const roomId = taskRoom.value;
+        if(!roomId) return alert(window.t('alert_req_fields'));
 
+        const segments = document.querySelectorAll('.task-line-segment');
         const eid = document.getElementById('edit-task-id').value;
+
         if (eid) {
+            // SINGLE EDIT MODE
+            const segment = segments[0];
+            const cat = segment.querySelector('.task-line-cat').value;
+            const start = segment.querySelector('.task-line-start').value;
+            const end = segment.querySelector('.task-line-end').value;
+            const status = segment.querySelector('.task-line-status').value;
+
+            if(!cat || !start || !end) return alert(window.t('alert_req_fields'));
+            if(new Date(start) > new Date(end)) return alert(window.t('alert_date_order'));
+
             const idx = tasks.findIndex(x => x.id === eid);
             if(idx !== -1) {
-                tasks[idx].room = taskRoom.value;
-                tasks[idx].cat = taskCat.value;
-                tasks[idx].start = taskStart.value;
-                tasks[idx].end = taskEnd.value;
-                tasks[idx].status = taskStatus.value;
+                tasks[idx].room = roomId;
+                tasks[idx].cat = cat;
+                tasks[idx].start = start;
+                tasks[idx].end = end;
+                tasks[idx].status = status;
             }
         } else {
-            tasks.push({
-                id: 'tsk' + Date.now(),
-                room: taskRoom.value,
-                cat: taskCat.value,
-                start: taskStart.value,
-                end: taskEnd.value,
-                status: taskStatus.value
+            // MULTI ADD MODE
+            let hasError = false;
+            segments.forEach(seg => {
+                const cat = seg.querySelector('.task-line-cat').value;
+                const start = seg.querySelector('.task-line-start').value;
+                const end = seg.querySelector('.task-line-end').value;
+                const status = seg.querySelector('.task-line-status').value;
+
+                if(!cat || !start || !end) {
+                    hasError = true;
+                    return;
+                }
+                if(new Date(start) > new Date(end)) {
+                    hasError = true;
+                    return;
+                }
+
+                tasks.push({
+                    id: 'tsk' + Date.now() + Math.random().toString().substr(2,4),
+                    room: roomId,
+                    cat: cat,
+                    start: start,
+                    end: end,
+                    status: status
+                });
             });
+            if(hasError) return alert(window.t('alert_req_fields') + " / " + window.t('alert_date_order'));
         }
         
         document.getElementById('edit-task-id').value = '';
@@ -606,12 +773,28 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editTask = (tid) => {
         const t = tasks.find(x => x.id === tid);
         if(!t) return;
+
+        // Populate room dropdown for edit
+        const floorOrder = { 'Källare': 1, 'Våning 1': 2, 'Våning 2': 3, 'Våning 3': 4, 'Utsida/Tomt': 5 };
+        const sortedRooms = [...rooms].sort((a,b) => (floorOrder[a.floor] || 99) - (floorOrder[b.floor] || 99));
+        let rOpts = `<option value="" disabled>${window.t('opt_room_sel')}</option>`;
+        rOpts += `<option value="ALLA">${window.t('opt_all_rooms')}</option>`;
+        sortedRooms.forEach(r => rOpts += `<option value="${r.name}">${window.getTrans('room-floor', r.floor)} - ${window.getTrans('room-type', r.type)}</option>`);
+        taskRoom.innerHTML = rOpts;
+
         document.getElementById('edit-task-id').value = tid;
         taskRoom.value = t.room;
-        taskCat.value = t.cat;
-        taskStart.value = t.start;
-        taskEnd.value = t.end;
-        taskStatus.value = t.status || 'pending';
+        
+        taskLinesContainer.innerHTML = '';
+        addTaskLine({
+            cat: t.cat,
+            start: t.start,
+            end: t.end,
+            status: t.status || 'pending',
+            isEdit: true
+        });
+
+        btnAddTaskLine.style.display = 'none'; // Only edit ONE at a time
         document.getElementById('form-task-title').innerText = window.t('title_edit_phase');
         formTask.style.display = 'block';
         window.scrollTo(0, document.getElementById('view-timeline').offsetTop);
@@ -699,8 +882,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     roomNameDisplay = window.getTrans('room-floor', rmObj.floor) + ' - ' + window.getTrans('room-type', rmObj.type);
                 }
             }
-            const catKey = t.cat === 'Rör/Vent' ? 'cat_rör' : ('cat_' + t.cat);
-            const rowKey = `<strong style="color:var(--text-primary);">${roomNameDisplay}</strong><br><span style="color:var(--primary-color);">${window.t(catKey)}</span>`;
+            const displayName = window.t('cat_' + t.cat.toLowerCase()) !== ('cat_' + t.cat.toLowerCase()) ? window.t('cat_' + t.cat.toLowerCase()) : t.cat;
+            const rowKey = `<strong style="color:var(--text-primary);">${roomNameDisplay}</strong><br><span style="color:var(--primary-color);">${displayName}</span>`;
             
             // Unique ID to merge identical room+cat combos to one line visually
             const logicKey = t.room + '_' + t.cat;
@@ -711,7 +894,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusColors = { pending: '#CBD5E1', ongoing: 'var(--warning-color)', done: 'var(--success-color)' };
         let activeBg = false;
 
-        const flatRows = Object.keys(rowsMap).sort(); // Sort by alphabet/floor organically
+        // Sort rows by the earliest start date of their records (Waterfall effect)
+        const flatRows = Object.keys(rowsMap).sort((a, b) => {
+            const minA = new Date(Math.min(...rowsMap[a].records.map(r => new Date(r.start))));
+            const minB = new Date(Math.min(...rowsMap[b].records.map(r => new Date(r.start))));
+            return minA - minB;
+        });
 
         flatRows.forEach(lKey => {
             activeBg = !activeBg;
@@ -808,7 +996,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let floorTotals = {};
         let grandBudget = 0;
-        let grandBreakdown = { Golv:0, Väggar:0, Tak:0, Rör:0, Ventilation:0, El:0, Fastinredning:0, Byggmaterial:0, 'Färg/Spackel':0, 'Lister/Foder':0, 'Fönster/Dörrar':0, Arbetskostnader:0, Buffert:0 };
+        let grandBreakdown = {};
         let floorBreakdowns = {};
         
         rooms.forEach(rm => {
@@ -818,26 +1006,38 @@ document.addEventListener('DOMContentLoaded', () => {
             grandBudget += sum;
             floorTotals[rm.floor] = (floorTotals[rm.floor] || 0) + sum;
             
-            if(!floorBreakdowns[rm.floor]) floorBreakdowns[rm.floor] = { Golv:0, Väggar:0, Tak:0, Rör:0, Ventilation:0, El:0, Fastinredning:0, Byggmaterial:0, 'Färg/Spackel':0, 'Lister/Foder':0, 'Fönster/Dörrar':0, Arbetskostnader:0, Buffert:0 };
+            if(!floorBreakdowns[rm.floor]) floorBreakdowns[rm.floor] = {};
             let fb = floorBreakdowns[rm.floor];
 
-            const sumFloor = (b.floor || b.floorPrice || 0) * rm.areas.floor;
-            const sumWall = (b.wall || b.wallPrice || 0) * rm.areas.wall;
-            const sumCeil = (b.ceil || b.ceilPrice || 0) * rm.areas.ceiling;
-            
-            grandBreakdown.Golv += sumFloor; fb.Golv += sumFloor;
-            grandBreakdown.Väggar += sumWall; fb.Väggar += sumWall;
-            grandBreakdown.Tak += sumCeil; fb.Tak += sumCeil;
-            grandBreakdown.Rör += (b.pipes || 0); fb.Rör += (b.pipes || 0);
-            grandBreakdown.Ventilation += (b.vent || 0); fb.Ventilation += (b.vent || 0);
-            grandBreakdown.El += (b.elec || 0); fb.El += (b.elec || 0);
-            grandBreakdown.Fastinredning += (b.fit || 0); fb.Fastinredning += (b.fit || 0);
-            grandBreakdown.Byggmaterial += (b.mat || 0); fb.Byggmaterial += (b.mat || 0);
-            grandBreakdown['Färg/Spackel'] += (b.paint || 0); fb['Färg/Spackel'] += (b.paint || 0);
-            grandBreakdown['Lister/Foder'] += (b.trim || 0); fb['Lister/Foder'] += (b.trim || 0);
-            grandBreakdown['Fönster/Dörrar'] += (b.door || 0); fb['Fönster/Dörrar'] += (b.door || 0);
-            grandBreakdown.Arbetskostnader += (b.ext || 0); fb.Arbetskostnader += (b.ext || 0);
-            grandBreakdown.Buffert += (b.unexp || 0); fb.Buffert += (b.unexp || 0);
+            // Migration/Normalizer: Handle both old and new format for background rendering
+            let items = b.items;
+            if (!items) {
+                items = [];
+                if(b.floor) items.push({ name: window.t('lbl_floor'), price: b.floor, type: 'floor_m2' });
+                if(b.wall) items.push({ name: window.t('lbl_wall'), price: b.wall, type: 'wall_m2' });
+                if(b.ceil) items.push({ name: window.t('lbl_ceiling'), price: b.ceil, type: 'ceil_m2' });
+                if(b.pipes) items.push({ name: window.t('lbl_pipes'), price: b.pipes, type: 'fixed' });
+                if(b.vent) items.push({ name: window.t('lbl_vent'), price: b.vent, type: 'fixed' });
+                if(b.elec) items.push({ name: window.t('lbl_elec'), price: b.elec, type: 'fixed' });
+                if(b.fit) items.push({ name: window.t('lbl_fit'), price: b.fit, type: 'fixed' });
+                if(b.mat) items.push({ name: window.t('lbl_mat'), price: b.mat, type: 'fixed' });
+                if(b.paint) items.push({ name: window.t('lbl_paint'), price: b.paint, type: 'fixed' });
+                if(b.trim) items.push({ name: window.t('lbl_trim'), price: b.trim, type: 'fixed' });
+                if(b.door) items.push({ name: window.t('lbl_door'), price: b.door, type: 'fixed' });
+                if(b.ext) items.push({ name: window.t('lbl_ext'), price: b.ext, type: 'fixed' });
+                if(b.unexp) items.push({ name: window.t('lbl_unexp'), price: b.unexp, type: 'fixed' });
+            }
+
+            items.forEach(it => {
+                let val = 0;
+                if (it.type === 'fixed') val = it.price;
+                else if (it.type === 'floor_m2') val = it.price * (parseFloat(rm.areas.floor) || 0);
+                else if (it.type === 'wall_m2') val = it.price * (parseFloat(rm.areas.wall) || 0);
+                else if (it.type === 'ceil_m2') val = it.price * (parseFloat(rm.areas.ceiling) || 0);
+
+                grandBreakdown[it.name] = (grandBreakdown[it.name] || 0) + val;
+                fb[it.name] = (fb[it.name] || 0) + val;
+            });
         });
 
         const genBreakdownHTML = (bdObj) => {
@@ -973,18 +1173,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // ===== BUDGET VS EXPENSES VARIANCE =====
-        let catSpent = { Golv:0, Väggar:0, Tak:0, Rör:0, Ventilation:0, El:0, Fastinredning:0, Byggmaterial:0, 'Färg/Spackel':0, 'Lister/Foder':0, 'Fönster/Dörrar':0, Arbetskostnader:0, Buffert:0 };
+        let catSpent = {};
         expenses.forEach(exp => {
             if(exp.items) {
                 exp.items.forEach(it => {
                     let cName = it.cat === 'Rör/Vent' ? 'Rör' : it.cat;
-                    if(catSpent[cName] !== undefined) catSpent[cName] += it.amount;
+                    catSpent[cName] = (catSpent[cName] || 0) + it.amount;
                 });
             } else if (exp.cats) {
                 const amtPerCat = exp.amount / (exp.cats.length || 1);
                 exp.cats.forEach(c => {
                     let cName = c === 'Rör/Vent' ? 'Rör' : c;
-                    if(catSpent[cName] !== undefined) catSpent[cName] += amtPerCat;
+                    catSpent[cName] = (catSpent[cName] || 0) + amtPerCat;
                 });
             }
         });
@@ -992,17 +1192,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const varDiv = document.getElementById('dash-category-variance');
         if(varDiv) {
             let varHtml = '';
-            categories.forEach(c => {
+            // Get unique categories from both budget and actual spending
+            const allCats = new Set([...Object.keys(grandBreakdown), ...Object.keys(catSpent)]);
+            
+            Array.from(allCats).sort().forEach(c => {
                 const b = grandBreakdown[c] || 0;
                 const s = catSpent[c] || 0;
                 if(b === 0 && s === 0) return;
                 const diff = b - s;
                 const color = diff >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
                 const sign = diff >= 0 ? '+' : '';
+                
+                // Try translate if it's a default cat, else use raw name
+                const displayName = window.t('cat_' + c.toLowerCase()) !== ('cat_' + c.toLowerCase()) ? window.t('cat_' + c.toLowerCase()) : c;
+
                 varHtml += `
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:8px 0;">
                         <div style="flex:1;">
-                            <div style="font-size:13px; font-weight:600; color:var(--text-primary);">${window.t('cat_' + c)}</div>
+                            <div style="font-size:13px; font-weight:600; color:var(--text-primary);">${displayName}</div>
                             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${window.t('lbl_budget_short')}: ${b.toLocaleString('sv-SE')} | ${window.t('lbl_outcome')}: ${s.toLocaleString('sv-SE')}</div>
                         </div>
                         <div style="font-weight:700; font-size:15px; color:${color}; text-align:right;">
@@ -1016,6 +1223,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ===== TIMELINE DATA LIST =====
+        const currentFilterVal = taskFilterCat.value;
+        let diffCats = new Set(categories);
+        Object.values(roomBudgets).forEach(b => {
+            if(b.items) b.items.forEach(it => diffCats.add(it.name));
+        });
+        
+        taskFilterCat.innerHTML = `<option value="ALLA" ${currentFilterVal==='ALLA'?'selected':''}>${window.t('cat_alla')}</option>`;
+        Array.from(diffCats).sort().forEach(c => {
+            const displayName = window.t('cat_' + c.toLowerCase()) !== ('cat_' + c.toLowerCase()) ? window.t('cat_' + c.toLowerCase()) : c;
+            taskFilterCat.innerHTML += `<option value="${c}" ${currentFilterVal===c?'selected':''}>${displayName}</option>`;
+        });
+
         taskListFull.innerHTML = '';
         const fCat = taskFilterCat.value;
         const statusColors = { pending: '#CBD5E1', ongoing: 'var(--warning-color)', done: 'var(--success-color)' };
@@ -1034,7 +1253,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="background:#fff; border:1px solid #E2E8F0; border-radius:8px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:2px;">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; <span style="color:${statusColors[t.status]};">${statusText[t.status]}</span></div>
-                            <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">${window.t('cat_' + t.cat)}</div>
+                            <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
+                                ${window.t('cat_' + t.cat.toLowerCase()) !== ('cat_' + t.cat.toLowerCase()) ? window.t('cat_' + t.cat.toLowerCase()) : t.cat}
+                            </div>
                             <div style="font-size:11px; color:var(--text-muted);"><i class="ph ph-calendar"></i> ${t.start} <i class="ph ph-arrow-right"></i> ${t.end}</div>
                         </div>
                         <div>
@@ -1066,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #E2E8F0;">
                             <div style="width:8px;height:8px;border-radius:50%;background:var(--warning-color);margin-right:12px;box-shadow:0 0 0 2px rgba(251, 191, 36, 0.2);"></div>
                             <div style="flex:1;">
-                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; ${window.t('cat_' + t.cat)}</div>
+                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; ${window.t('cat_' + t.cat.toLowerCase()) !== ('cat_' + t.cat.toLowerCase()) ? window.t('cat_' + t.cat.toLowerCase()) : t.cat}</div>
                                 <div style="font-size:11px;color:var(--text-muted);">${window.t('agenda_ongoing')} ${t.end}</div>
                             </div>
                         </div>
@@ -1077,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #E2E8F0;">
                             <div style="width:8px;height:8px;border-radius:50%;background:#CBD5E1;margin-right:12px;"></div>
                             <div style="flex:1;">
-                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; ${window.t('cat_' + t.cat)}</div>
+                                <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${t.room === 'ALLA' || t.room === 'Övergripande (Hela bygget)' ? window.t('cat_alla') : t.room} &bull; ${window.t('cat_' + t.cat.toLowerCase()) !== ('cat_' + t.cat.toLowerCase()) ? window.t('cat_' + t.cat.toLowerCase()) : t.cat}</div>
                                 <div style="font-size:11px;color:var(--text-muted);">${window.t('agenda_starts')} ${t.start}</div>
                             </div>
                         </div>
