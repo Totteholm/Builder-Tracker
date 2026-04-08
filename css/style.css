@@ -316,16 +316,21 @@ h1#page-title {
     font-size: 14px;
 }
 
+#budget-items-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
 .budget-line-row {
     background-color: #F8FAFC;
-    padding: 12px;
+    padding: 8px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
-    margin-bottom: 12px;
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 .budget-line-row .row-actions {
     position: absolute;

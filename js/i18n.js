@@ -97,6 +97,7 @@ const translations = {
         lbl_status: "Status",
         lbl_tasks: "Inlagda Skeden",
         table_room_cat: "Rum / Skede",
+        lbl_suggested: "Förslag",
 
         // Actions & Prompts
         alert_del_project: "Är du säker på att du vill radera projektet och all dess lagrade data?",
@@ -289,6 +290,7 @@ const translations = {
         lbl_status: "Status",
         lbl_tasks: "Scheduled Phases",
         table_room_cat: "Room / Phase",
+        lbl_suggested: "Suggested",
         
         // Actions & Prompts
         alert_del_project: "Are you sure you want to delete the project and all its stored data?",
@@ -478,6 +480,7 @@ const translations = {
         lbl_status: "Tila",
         lbl_tasks: "Lisätyt vaiheet",
         table_room_cat: "Huone / Vaihe",
+        lbl_suggested: "Suositus",
         
         // Actions & Prompts
         alert_del_project: "Oletko varma, että haluat poistaa projektin ja kaikki sen tiedot?",

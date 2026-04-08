@@ -123,6 +123,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const categories = ['Golv', 'Väggar', 'Tak', 'Rör', 'Ventilation', 'El', 'Fastinredning', 'Byggmaterial', 'Färg/Spackel', 'Lister/Foder', 'Fönster/Dörrar', 'Arbetskostnader', 'Buffert', 'Rivning', 'Bygg'];
 
+    const TIME_FACTORS = {
+        'Bygg': 0.6,
+        'Rivning': 0.8,
+        'Golv': 0.5,
+        'Väggar': 0.6,
+        'Tak': 0.5,
+        'Färg/Spackel': 0.7
+    };
+    const WORK_DAY_HOURS = 8;
+
+    window.calculateSuggestedDays = (roomName, category) => {
+        const factor = TIME_FACTORS[category];
+        if (!factor) return null; // Only suggest for categories with defined factors
+
+        const rm = rooms.find(r => r.name === roomName);
+        if(!rm) return null;
+        
+        let area = 0;
+        if(category === 'Golv') {
+            area = parseFloat(rm.areas.floor);
+        } else if(category === 'Tak') {
+            area = parseFloat(rm.areas.ceiling);
+        } else {
+            // Default to wall area for walls, construction, painting etc.
+            area = parseFloat(rm.areas.wall);
+        }
+
+        if(!area || area <= 0) return null;
+
+        let hours = area * factor;
+        
+        // Bathroom bonus: added to the base work for these specific rooms
+        if(rm.type === 'Badrum' || rm.type === 'Toalett') {
+            hours += 40;
+        }
+
+        return Math.ceil(hours / WORK_DAY_HOURS);
+    };
+
     // ---- INIT ----
     currencySelect.value = currentCurrency;
 
@@ -303,26 +342,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn-row-action btn-row-delete" onclick="document.getElementById('${id}').remove()"><i class="ph ph-trash"></i></button>
                 </div>
                 
-                <div style="display:flex; gap:8px;">
-                    <div style="flex:2;">
-                        <label style="font-size:10px;color:var(--text-muted);">${window.t('lbl_budget_item_name')}</label>
-                        <input type="text" class="input-field budget-item-name" style="margin-bottom:0;" value="${name}">
+                <div style="margin-right: 40px;">
+                    <label style="font-size:9px;color:var(--text-muted);display:block;">${window.t('lbl_budget_item_name')}</label>
+                    <input type="text" class="input-field budget-item-name" style="margin-bottom:4px; padding:4px 8px; font-size:12px; font-weight:600;" value="${name}">
+                </div>
+
+                <div style="display:flex; gap:4px;">
+                     <div style="flex:1;">
+                        <label style="font-size:9px;color:var(--text-muted);display:block;">${window.t('lbl_budget_item_price')}</label>
+                        <input type="number" class="input-field budget-item-price" style="margin-bottom:0; padding:4px 8px; font-size:12px;" value="${price}">
                     </div>
                 </div>
-                <div style="display:flex; gap:8px;">
-                     <div style="flex:1;">
-                        <label style="font-size:10px;color:var(--text-muted);">${window.t('lbl_budget_item_price')}</label>
-                        <input type="number" class="input-field budget-item-price" style="margin-bottom:0;" value="${price}">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:10px;color:var(--text-muted);">${window.t('lbl_budget_item_type')}</label>
-                        <select class="input-field budget-item-type" style="margin-bottom:0;">
-                            <option value="fixed" ${type === 'fixed' ? 'selected' : ''}>${window.t('opt_type_fixed')}</option>
-                            <option value="floor_m2" ${type === 'floor_m2' ? 'selected' : ''}>${window.t('opt_type_floor')}</option>
-                            <option value="wall_m2" ${type === 'wall_m2' ? 'selected' : ''}>${window.t('opt_type_wall')}</option>
-                            <option value="ceil_m2" ${type === 'ceil_m2' ? 'selected' : ''}>${window.t('opt_type_ceil')}</option>
-                        </select>
-                    </div>
+                <div>
+                    <label style="font-size:9px;color:var(--text-muted);display:block;">${window.t('lbl_budget_item_type')}</label>
+                    <select class="input-field budget-item-type" style="margin-bottom:0; padding:4px 8px; font-size:11px;">
+                        <option value="fixed" ${type === 'fixed' ? 'selected' : ''}>${window.t('opt_type_fixed')}</option>
+                        <option value="floor_m2" ${type === 'floor_m2' ? 'selected' : ''}>${window.t('opt_type_floor')}</option>
+                        <option value="wall_m2" ${type === 'wall_m2' ? 'selected' : ''}>${window.t('opt_type_wall')}</option>
+                        <option value="ceil_m2" ${type === 'ceil_m2' ? 'selected' : ''}>${window.t('opt_type_ceil')}</option>
+                    </select>
                 </div>
             </div>
         `;
@@ -345,8 +383,27 @@ document.addEventListener('DOMContentLoaded', () => {
         budgetRoomIdHidden.value = roomId;
         
         // Migration logic: handle old object format vs new array format
-        let b = roomBudgets[roomId] || { items: [] };
-        if (typeof b === 'object' && !b.items) {
+        let b = roomBudgets[roomId];
+        
+        if (!b) {
+            // New room - initialize with full standard template in the requested order
+            const template = [
+                { name: window.t('lbl_floor'), price: '', type: 'floor_m2' },
+                { name: window.t('lbl_walls'), price: '', type: 'wall_m2' },
+                { name: window.t('lbl_ceiling'), price: '', type: 'ceil_m2' },
+                { name: window.t('lbl_mat'), price: '', type: 'fixed' },
+                { name: window.t('lbl_paint'), price: '', type: 'fixed' },
+                { name: window.t('lbl_door'), price: '', type: 'fixed' },
+                { name: window.t('lbl_trim'), price: '', type: 'fixed' },
+                { name: window.t('lbl_elec'), price: '', type: 'fixed' },
+                { name: window.t('lbl_vent'), price: '', type: 'fixed' },
+                { name: window.t('lbl_pipes'), price: '', type: 'fixed' },
+                { name: window.t('lbl_fit'), price: '', type: 'fixed' },
+                { name: window.t('lbl_ext'), price: '', type: 'fixed' },
+                { name: window.t('lbl_unexp'), price: '', type: 'fixed' }
+            ];
+            b = { items: template };
+        } else if (typeof b === 'object' && !b.items) {
             // Old format migration
             const items = [];
             if(b.floor) items.push({ name: window.t('lbl_floor'), price: b.floor, type: 'floor_m2' });
@@ -644,6 +701,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if(b.items) b.items.forEach(it => dynamicCats.add(it.name));
         });
 
+        // Remove Arbetskostnader and Buffert from timeline selection
+        dynamicCats.delete('Arbetskostnader');
+        dynamicCats.delete('Buffert');
+
         let catOpts = `<option value="" disabled ${!initData ? 'selected' : ''} data-i18n="opt_cat_sel">${window.t('opt_cat_sel')}</option>`;
         Array.from(dynamicCats).sort().forEach(c => {
             const displayName = window.t('cat_' + c.toLowerCase()) !== ('cat_' + c.toLowerCase()) ? window.t('cat_' + c.toLowerCase()) : c;
@@ -656,16 +717,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button type="button" class="remove-task-line" onclick="document.getElementById('${id}').remove()" style="position:absolute;top:10px;right:10px;color:var(--danger-color);background:none;border:none;cursor:pointer; display:${initData && initData.isEdit ? 'none' : 'block'}"><i class="ph ph-trash" style="font-size:18px;"></i></button>
                 
                 <div class="form-group-title" style="font-weight:600;font-size:11px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">${window.t('lbl_select_cat')}</div>
-                <select class="input-field task-line-cat" style="margin-bottom:12px;">${catOpts}</select>
+                <select class="input-field task-line-cat" style="margin-bottom:12px;" onchange="updateTaskSuggestion('${id}')">${catOpts}</select>
 
-                <div style="display:flex; gap:10px; margin-bottom:12px;">
-                    <div style="flex:1;">
-                        <label style="font-size:11px;color:var(--text-muted);">${window.t('lbl_start')}</label>
-                        <input type="date" class="input-field task-line-start" value="${initData ? initData.start : ''}">
+                <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="font-size:11px;color:var(--text-muted);">${window.t('lbl_period')}</label>
+                            <span id="suggestion-${id}" style="font-size:10px; color:var(--accent-color); font-weight:600;"></span>
+                        </div>
+                        <input type="number" class="input-field task-line-days" value="${initData ? (initData.days || '') : ''}" placeholder="${window.t('lbl_days')}" oninput="updateTaskDates('${id}')">
                     </div>
-                    <div style="flex:1;">
-                        <label style="font-size:11px;color:var(--text-muted);">${window.t('lbl_end')}</label>
-                        <input type="date" class="input-field task-line-end" value="${initData ? initData.end : ''}">
+
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1;">
+                            <label style="font-size:11px;color:var(--text-muted);">${window.t('lbl_start')}</label>
+                            <input type="date" class="input-field task-line-start" value="${initData ? initData.start : ''}" onchange="updateTaskDates('${id}')">
+                        </div>
+                        <div style="flex:1;">
+                            <label style="font-size:11px;color:var(--text-muted);">${window.t('lbl_end')}</label>
+                            <input type="date" class="input-field task-line-end" value="${initData ? initData.end : ''}" readonly style="background:#f1f5f9; cursor:not-allowed;">
+                        </div>
                     </div>
                 </div>
 
@@ -678,6 +749,41 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         taskLinesContainer.insertAdjacentHTML('beforeend', html);
+        if(initData) updateTaskSuggestion(id);
+    };
+
+    window.updateTaskSuggestion = (id) => {
+        const seg = document.getElementById(id);
+        const cat = seg.querySelector('.task-line-cat').value;
+        const roomName = taskRoom.value;
+        const suggestionEl = document.getElementById('suggestion-' + id);
+        
+        if(!cat || !roomName) {
+            suggestionEl.textContent = '';
+            return;
+        }
+
+        const days = window.calculateSuggestedDays(roomName, cat);
+        if(days) {
+            suggestionEl.textContent = window.t('lbl_suggested') + ': ' + days + ' ' + (window.currentLang === 'sv' ? 'dgr' : 'days');
+        } else {
+            suggestionEl.textContent = '';
+        }
+    };
+
+    window.updateTaskDates = (id) => {
+        const seg = document.getElementById(id);
+        const startVal = seg.querySelector('.task-line-start').value;
+        const daysVal = parseInt(seg.querySelector('.task-line-days').value) || 0;
+        const endInput = seg.querySelector('.task-line-end');
+
+        if (startVal && daysVal > 0) {
+            const startD = new Date(startVal);
+            startD.setDate(startD.getDate() + daysVal - 1);
+            endInput.value = startD.toISOString().split('T')[0];
+        } else {
+            endInput.value = '';
+        }
     };
 
     btnAddTask.addEventListener('click', () => {
@@ -721,6 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const start = segment.querySelector('.task-line-start').value;
             const end = segment.querySelector('.task-line-end').value;
             const status = segment.querySelector('.task-line-status').value;
+            const days = parseInt(segment.querySelector('.task-line-days').value) || 0;
 
             if(!cat || !start || !end) return alert(window.t('alert_req_fields'));
             if(new Date(start) > new Date(end)) return alert(window.t('alert_date_order'));
@@ -732,6 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tasks[idx].start = start;
                 tasks[idx].end = end;
                 tasks[idx].status = status;
+                tasks[idx].days = days;
             }
         } else {
             // MULTI ADD MODE
@@ -741,6 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const start = seg.querySelector('.task-line-start').value;
                 const end = seg.querySelector('.task-line-end').value;
                 const status = seg.querySelector('.task-line-status').value;
+                const days = parseInt(seg.querySelector('.task-line-days').value) || 0;
 
                 if(!cat || !start || !end) {
                     hasError = true;
@@ -757,7 +866,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     cat: cat,
                     start: start,
                     end: end,
-                    status: status
+                    status: status,
+                    days: days
                 });
             });
             if(hasError) return alert(window.t('alert_req_fields') + " / " + window.t('alert_date_order'));
@@ -786,10 +896,19 @@ document.addEventListener('DOMContentLoaded', () => {
         taskRoom.value = t.room;
         
         taskLinesContainer.innerHTML = '';
+        
+        let initialDays = t.days;
+        if(!initialDays && t.start && t.end) {
+            const s = new Date(t.start);
+            const e = new Date(t.end);
+            initialDays = Math.ceil((e - s) / (1000 * 60 * 60 * 24)) + 1;
+        }
+
         addTaskLine({
             cat: t.cat,
             start: t.start,
             end: t.end,
+            days: initialDays,
             status: t.status || 'pending',
             isEdit: true
         });
